@@ -1,4 +1,6 @@
+# curses.beep() nicht gut, dass ich den Befehl gefunden habe
 import curses
+
 accounts = ["Tim", "Justin", "Dominik"]
 
 data = [
@@ -8,7 +10,6 @@ data = [
         "password": "HAHAHA1234_Ü",
         "note 1": "Das Password ist falsch"
     },
-
     {
         "category": "category1",
         "plattform": "LeagueOfLegends",
@@ -18,63 +19,93 @@ data = [
 ]
 
 class Interface:
-    def __init__ (self, accounts:list ):
-        print("I have been initiliased")
+    def __init__(self, accounts: list):
+        print("I have been initialized")
         self._accounts = accounts
+        self._layer = 0
+        self._LoginPage = ["Choose an Account", "Create an Account", "Close this application"]
+        self._stdscr = None
 
-    def showRespone(self):
-        print("Im Alive")
+    def showResponse(self):
+        print("I'm Alive")
 
-    def getdata(self, data:list):
+    def getData(self, data: list):
         self._data = data
 
     def getMasterPassword(self):
         print("Master Password Eingabe\n")
-        return  input() #Initialiesieren der Account Funktion über main
-    
+        return input()
+
     def start(self):
-        print("hier2")
-        def main(stdscr):
-            # Kein Echo der Tastendrücke
-            curses.noecho()
-            # Sofortige Reaktion auf Tastendrücke (keine Zeilenpufferung)
-            curses.cbreak()
-            # Spezielle Tasten wie Pfeiltasten aktivieren
-            stdscr.keypad(True)
+        print("Starting the interface...")
+        curses.wrapper(self.main)
 
-            stdscr.addstr(0, 0, "Drücke eine Pfeiltaste (oben, unten, links, rechts) oder 'q' zum Beenden.")
+    def main(self, stdscr):
+        self._stdscr = stdscr
+        curses.noecho()
+        curses.cbreak()
+        stdscr.keypad(True)
+        stdscr.clear()
 
-            while True:
-                key = stdscr.getch()
+        self._stdscr.addstr(0, 0, "Welcome to Password Manager.")
+        for i in range(len(self._LoginPage)):
+            self._stdscr.addstr(i + 1, 5, self._LoginPage[i])
+        self._stdscr.refresh()
+        self._chooseLayer = 1
+        self._lastChooseLayer = self._chooseLayer
+        while True:
+            key = self.handleKeyPress()
+            if key == 5:
+                break
 
-                if key == curses.KEY_UP:
-                    stdscr.addstr(1, 0, "Pfeiltaste oben gedrückt.   ")
-                elif key == curses.KEY_DOWN:
-                    stdscr.addstr(1, 0, "Pfeiltaste unten gedrückt.  ")
-                elif key == curses.KEY_LEFT:
-                    stdscr.addstr(1, 0, "Pfeiltaste links gedrückt.  ")
-                elif key == curses.KEY_RIGHT:
-                    stdscr.addstr(1, 0, "Pfeiltaste rechts gedrückt. ")
-                elif key == ord('q'):
-                    break
-                
-                stdscr.refresh()
+        curses.nocbreak()
+        stdscr.keypad(False)
+        curses.echo()
 
-            # Rückkehr zu den Standardeinstellungen
-            curses.nocbreak()
-            stdscr.keypad(False)
-            curses.echo()
-        curses.wrapper(main)
-    
-    
+    def handleKeyPress(self):
+        keypressed = 0
+        key = self._stdscr.getch()
+
+        if key == curses.KEY_UP:
+            curses.beep()
+            keypressed = 1
+            self._chooseLayer = self._chooseLayer - 1
+            self._stdscr.addstr(5, 0, "Pfeiltaste oben gedrückt.   ")
+        elif key == curses.KEY_DOWN:
+            keypressed = 2
+            self._chooseLayer = self._chooseLayer + 1
+            self._stdscr.addstr(5, 0, "Pfeiltaste unten gedrückt.  ")
+        elif key == curses.KEY_LEFT:
+            keypressed = 3
+            self._stdscr.addstr(5, 0, "Pfeiltaste links gedrückt.  ")
+        elif key == curses.KEY_RIGHT:
+            keypressed = 4
+            self._stdscr.addstr(5, 0, "Pfeiltaste rechts gedrückt. ")
+        elif key == ord('q'):
+            keypressed = 5
+            self._stdscr.addstr(5, 0, "Q gedrückt.  ")
         
-    
+        self._stdscr.refresh()
+        if(self._chooseLayer >len(self._LoginPage)):
+            self._chooseLayer = 1
+        elif(self._chooseLayer <1):
+            self._chooseLayer = len(self._LoginPage)
+        self._stdscr.addstr(self._lastChooseLayer, 0, "    ")
+        self._stdscr.addstr(self._chooseLayer, 0, "--->")
+        
+        self._lastChooseLayer = self._chooseLayer
+
+        
+
+        return keypressed
 
 def main():
-    
-    test: Interface = Interface(accounts= accounts)
-    test.showRespone()
-    test.start()
+    interface = Interface(accounts=accounts)
+    interface.showResponse()
+    interface.getData(data)
+    interface.start()
+
 main()
+
 
     
