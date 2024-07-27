@@ -9,7 +9,7 @@ class TestPasswordGenerator(unittest.TestCase):
         self.passGenLower = passwordGenerator(5, False, False, False)
         self.passGenUpper = passwordGenerator(5, True, False, False)
         self.passGenNumbers = passwordGenerator(5, True, True, False)
-        self.passGenSC = passwordGenerator(5)
+        self.passGenSC = passwordGenerator(8)
 
     def test_init(self) -> None:
         self.assertEqual(self.passGenLower.length, 5)
@@ -36,7 +36,6 @@ class TestPasswordGenerator(unittest.TestCase):
         passLower = self.passGenLower.generate()
         passUpper = self.passGenUpper.generate()
         passNumbers = self.passGenNumbers.generate()
-        passSC = self.passGenSC.generate()
         for u in string.ascii_uppercase:
             self.assertNotIn(u, passLower)
         for n in string.digits:
@@ -46,6 +45,16 @@ class TestPasswordGenerator(unittest.TestCase):
             self.assertNotIn(sc, passLower)
             self.assertNotIn(sc, passUpper)
             self.assertNotIn(sc, passNumbers)
+    def test_passwordSafety(self) -> None:
+        passLower = self.passGenLower.generate()
+        passUpper = self.passGenUpper.generate()
+        passNumbers = self.passGenNumbers.generate()
+        passSC = self.passGenSC.generate()
+        self.assertEqual(self.passGenLower.passwordSafety("12345"), 0)
+        self.assertEqual(self.passGenLower.passwordSafety(passLower), 1)
+        self.assertEqual(self.passGenUpper.passwordSafety(passUpper), 2)
+        self.assertEqual(self.passGenNumbers.passwordSafety(passNumbers), 2)
+        self.assertEqual(self.passGenSC.passwordSafety(passSC), 3)
 
     def tearDown(self) -> None:
         del self.passGenLower
