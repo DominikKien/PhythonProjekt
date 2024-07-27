@@ -14,7 +14,7 @@ class Password :
     def __init__(self):#To read existing password
         pass
 
-    def derive_key(password, salt):
+    def derive_key(self, password, salt):
         return bcrypt.kdf(password=password.encode(), salt=salt, desired_key_bytes=32, rounds=100)
 
     def encode(plaintext,  password):

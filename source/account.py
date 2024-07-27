@@ -1,4 +1,4 @@
-import Password
+import source.password as password
 
 class Account(object):
 
@@ -24,7 +24,7 @@ class Account(object):
         pass
 
     def addPassword(self, usage, password):
-            self.passwords.__add__(Password(usage, password))
+            self.passwords.__add__(password(usage, password))
 
 
 a1 = Account("tim.brielmayer@gmail.com", 12345678)
