@@ -38,6 +38,7 @@ class passwordGenerator():
             if sha1[5:] == suffix:
                 print(f"Passwort wurde {count} mal gehackt.")
                 return True
+        print("Passwort ist sicher!!")
         return False
 
 
@@ -49,5 +50,7 @@ class passwordGenerator():
 
 
 
-pg = passwordGenerator(8)
-pg.haveIBeenPwned("123456")
+pg = passwordGenerator(5, False, False, False)
+test = pg.generate()
+print(test)
+pg.haveIBeenPwned("Xcsiiajsh/&T++*78d.ga,scehw$48e/978rw§tzgfc")
