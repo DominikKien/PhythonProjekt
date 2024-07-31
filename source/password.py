@@ -17,7 +17,7 @@ class Password :
     def derive_key(self, password, salt):
         return bcrypt.kdf(password=password.encode(), salt=salt, desired_key_bytes=32, rounds=100)
 
-    def encode(plaintext,  password):
+    def encode(plaintext,  password) ->int:
         salt = get_random_bytes(16)  # Generate a random salt
         key = derive_key(password, salt)  # Derive the key using the salt
         iv = get_random_bytes(16)
