@@ -1,4 +1,4 @@
-import source.password as password
+import password as password
 
 class Account(object):
 
