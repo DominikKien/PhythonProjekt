@@ -7,8 +7,8 @@ class TwoFactorAuth():
 
     """Class handling the two factor authentication"""
 
-    def __init__(self) -> None:
-        self.key = ""
+    def __init__(self, key : str = "") -> None:
+        self.key = key
         self.totp = pyotp.TOTP(self.key)
 
     def generateKey(self, accountName : str) -> str:
