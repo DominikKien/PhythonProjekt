@@ -18,10 +18,11 @@ class Storage:
         with open(self.filepath, 'w') as file:
             json.dump(self.data, file, indent=4)
 
-    def add_password(self, username: str, password: str, notes: str = "", category: str = ""):
+    def add_password(self, username: str, password: str, url: str, notes: str = "", category: str = ""):
         entry = {
             "username": username,
             "password": password,
+            "url": url,
             "notes": notes,
             "category": category,
             "created_at": datetime.now().isoformat(),

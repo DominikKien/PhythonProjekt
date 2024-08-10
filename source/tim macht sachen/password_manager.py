@@ -8,13 +8,14 @@ class PasswordManager:
         self.encryption = Encryption(user.master_password_hash)
         self.storage = Storage(storage_file)
 
-    def add_entry(self, username: str, password: str, notes: str = "", category: str = ""):
+    def add_entry(self, username: str, password: str, url: str, notes: str = "", category: str = ""):
         encrypted_password = self.encryption.encrypt(password)
-        self.storage.add_password(username, encrypted_password, notes, category)
+        self.storage.add_password(username, encrypted_password, url, notes, category)
 
     def get_entry(self, username: str):
         entry = self.storage.get_password(username)
         if entry:
+            # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
         return entry
 
@@ -24,9 +25,3 @@ class PasswordManager:
 
     def delete_entry(self, username: str):
         self.storage.delete_password(username)
-
-user = User("bim333", "1234")
-pwm = PasswordManager(user)
-
-pwm.add_entry("bim333", "4321", "testing", "test")
-

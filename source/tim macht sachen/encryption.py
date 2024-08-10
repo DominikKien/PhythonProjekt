@@ -8,30 +8,35 @@ import os
 class Encryption:
     def __init__(self, master_password: str):
         self.backend = default_backend()
-        self.salt = os.urandom(16)
-        self.key = self.derive_key(master_password)
+        self.master_password = master_password
 
-    def derive_key(self, master_password: str) -> bytes:
+    def derive_key(self, master_password: str, salt: bytes) -> bytes:
         kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
-            length=32,
-            salt=self.salt,
+            length=32,  # 32 bytes = 256 bits for AES-256
+            salt=salt,
             iterations=100000,
             backend=self.backend
         )
-        return urlsafe_b64encode(kdf.derive(master_password.encode()))
+        return kdf.derive(master_password.encode('latin-1'))
 
     def encrypt(self, plaintext: str) -> str:
+        salt = os.urandom(16)
         iv = os.urandom(16)
-        cipher = Cipher(algorithms.AES(self.key), modes.CFB(iv), backend=self.backend)
+        key = self.derive_key(self.master_password, salt)
+        cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=self.backend)
         encryptor = cipher.encryptor()
-        ciphertext = encryptor.update(plaintext.encode()) + encryptor.finalize()
-        return urlsafe_b64encode(iv + ciphertext).decode('utf-8')
+        ciphertext = encryptor.update(plaintext.encode('latin-1')) + encryptor.finalize()
+        encrypted_data = urlsafe_b64encode(salt + iv + ciphertext).decode('latin-1')
+        return encrypted_data
 
     def decrypt(self, ciphertext: str) -> str:
-        data = urlsafe_b64decode(ciphertext.encode('utf-8'))
-        iv = data[:16]
-        cipher = Cipher(algorithms.AES(self.key), modes.CFB(iv), backend=self.backend)
+        data = urlsafe_b64decode(ciphertext.encode('latin-1'))
+        salt = data[:16]  # Extract the salt
+        iv = data[16:32]  # Extract the IV
+        ciphertext = data[32:]  # Extract the ciphertext
+        key = self.derive_key(self.master_password, salt)
+        cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=self.backend)
         decryptor = cipher.decryptor()
-        plaintext = decryptor.update(data[16:]) + decryptor.finalize()
-        return plaintext.decode('utf-8')
+        plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+        return plaintext.decode('latin-1')
