@@ -100,3 +100,4 @@ class PasswordGenerator():
         while not self.containsEverything(passwordAttempt):
             passwordAttempt = ''.join(random.choice(self.chars) for _ in range(self.length))
         return passwordAttempt
+

@@ -114,7 +114,7 @@ class PasswordManager:
 pm = PasswordManager()
 
 # Account hinzufügen
-pm.add_account("account1", "master_password1")
+pm.add_account("account1", "12345")
 
 # Account bekommen
 account = pm.get_account("account1")
@@ -131,3 +131,4 @@ pm.save("passwords.dat")
 
 # Passwörter aus Datei laden
 pm.load("passwords.dat")
+
