@@ -55,7 +55,7 @@ class PasswordGenerator():
         hashes = (line.split(':') for line in result.text.splitlines())
         for suffix, count in hashes:
             if sha1[5:] == suffix:
-                breachCount = count
+                breachCount = int(count)
         return int(breachCount)
 
     def passwordSafety(self, password : str) -> str:

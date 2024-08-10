@@ -53,6 +53,10 @@ class TestPasswordGenerator(unittest.TestCase):
         self.assertTrue(self.passGenLower.containsEverything("aBc"))
         self.assertTrue(self.passGenLower.containsEverything("aBc123"))
         self.assertTrue(self.passGenLower.containsEverything("aBc123."))
+
+        self.assertFalse(self.passGenLower.containsEverything("abc"))
+        self.assertFalse(self.passGenLower.containsEverything("aBc"))
+        self.assertFalse(self.passGenLower.containsEverything("aBc123"))
     
 
     def test_passwordSafety(self) -> None:
