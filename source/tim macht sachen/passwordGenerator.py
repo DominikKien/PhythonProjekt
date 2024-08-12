@@ -62,39 +62,52 @@ class PasswordGenerator():
 
         """Calculates the safety of a password"""
 
-        bruteForceSafety = self.length * math.log2(len(self.chars))
-        message = ""
+        bruteForceSafety = int(self.length * math.log2(len(self.chars)))
         #Pwned password
         if self.haveIBeenPwned(password) > 0:
-            message = f"Password has been breached {self.haveIBeenPwned(password)} times."
+            return f"Password has been breached {self.haveIBeenPwned(password)} times."
         #Weak password
         elif bruteForceSafety < 25:
-            message = "weak"
+            return "weak"
         #OK password
         elif 25 <= bruteForceSafety < 45:
-            message = "OK"
+            return "OK"
         #strong password
         elif bruteForceSafety >= 45:
-            message = "strong"
-        message =  "Something went wrong"
-        return message
+            return "strong"
+        return  "Something went wrong"
+        
+        
+        
 
     def containsEverything(self, testPW : str) -> bool:
 
         """Checks if the password contains at least one of the requested characters"""
-
-        contains = True
-        if string.ascii_uppercase in testPW != self.useCapitals:
-            contains = False
-        if string.digits in testPW != self.useNumbers:
-            contains = False
-        if "%+'-/!,$_" in testPW != self.useCapitals:
-            contains = False
-        return contains
+        if(self.useCapitals):
+            contains1 = False
+        else:
+            contains1 = True
+        if(self.useNumbers):
+            contains2 = False
+        else:
+            contains2 = True
+        if(self.useSpecialCharacters):
+            contains3 = False
+        else:
+            contains3 = True
+        
+        for char in testPW:
+            if (char in string.ascii_uppercase):
+                contains1 = True
+            if (char in string.digits):
+                contains2 = True
+            if (char in "%+'-/!,$_"):
+                contains3 = True
+        return (contains1 and contains2 and contains3)
 
     def generate(self) -> str:
 
-        """Generates the password"""
+        """Generates a random password with given criterias"""
 
         passwordAttempt = ""
         while not self.containsEverything(passwordAttempt):

@@ -4,6 +4,7 @@ import csv
 from user import User
 from password_manager import PasswordManager
 from passwordGenerator import PasswordGenerator
+import string
 
 accounts = ["Choose an Account","Tim", "Justin", "Dominik"]
 
@@ -18,12 +19,12 @@ class Interface:
         self.passwordgenerator = PasswordGenerator(6)
         
         
-        startPage = ["Welcome to Password Manager","Choose an Account", "Create an Account", "Close this application"]                                          #0
-        createAccountPage = ["Create your Account","Type your Username","","Type your password","","Type your Password again","","Create Account"]              #1
-        LoginAccountPage = ["Log into your Account","Type your Username","","Type your password","","LogIn"]                                                    #2
-        currentAccountPage = ["","Create a new Entry","Search per Name or URL for the plattform","","Search"]                                                   #3
+        startPage = ["Welcome to Password Manager","Choose an Account","Create an Account",  "Close this application"]                                                  #0
+        createAccountPage = ["Create your Account","Type your Username","","Type your password","","Type your Password again","","Create Account","Generate password"]  #1
+        LoginAccountPage = ["Log into your Account","Type your Username","","Type your password","","LogIn"]                                                            #2
+        currentAccountPage = ["","Create a new Entry","Search per Name or URL for the plattform","","Search"]                                                           #3
         newEntryPage =["New Entry","Type your Name for the plattform","","Type the url","","Assign a category","","Type the password","", "might want to add a short Note?","","Save"] #4
-        showPlattformPage =["Entry","Name of the plattform","","url:","","category","","password","", "Note","","Save","last edit",""]                          #5
+        showPlattformPage =["Entry","Name of the plattform","","url:","","category","","password","", "Note","","Save","last edit",""]                                  #5
         self._allPages = [startPage, createAccountPage, LoginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
     
     def showList(self, layer:int) -> int:
@@ -66,6 +67,7 @@ class Interface:
         createPassword2=""
         masterpassword=""
         while True:
+            checkPassword = False
             chooseRow = self._lastChooseRow
             key = self._stdscr.getkey()
             #self._stdscr.addstr(6, 0, key)
@@ -79,6 +81,15 @@ class Interface:
                             self._stdscr.addstr(1, 30, "Passwords dont match")
                         else:
                             lengthOfPage = self.showList(4)
+                    elif(self._layer == 1 and chooseRow ==8):
+                        createPassword1 = self.passwordgenerator.generate()
+                        createPassword2 = createPassword1
+                        self._stdscr.move(4, 4)
+                        self._stdscr.clrtoeol()
+                        self._stdscr.addstr(4, 4, createPassword2+ "  ")
+                        self._stdscr.move(6, 4)
+                        self._stdscr.clrtoeol()
+                        self._stdscr.addstr(6, 4, createPassword2+ "  ")
                     elif(self._layer == 2 and 0<chooseRow<5):#Einloggen Eingabe
                         stdscr.keypad(False)
                         typeMode = True
@@ -128,8 +139,10 @@ class Interface:
                 elif(chooseRow == 3 or chooseRow == 4):#password1
                     if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
                         createPassword1 = createPassword1[:-1]
+                        checkPassword = True
                     elif len(key) == 1 and 32 <= ord(key) <= 126:
                         createPassword1 = createPassword1 + key
+                        checkPassword = True
                     self._stdscr.addstr(4, 4, createPassword1+ "  ")
                 elif(chooseRow == 5 or chooseRow == 6):#Password 2
                     if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
@@ -138,7 +151,6 @@ class Interface:
                         createPassword2 = createPassword2 + key
                     self._stdscr.addstr(6, 4, createPassword2+ "  ")
             elif(typeMode == True and self._layer == 2):#Login Eingabe
-                self._stdscr.addstr(6, 4, "Da sind mer")
                 if(chooseRow == 1 or chooseRow == 2):
                     if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
                         userName = userName[:-1]
@@ -152,25 +164,26 @@ class Interface:
                         masterpassword = masterpassword + key
                 self._stdscr.addstr(4, 4, masterpassword+ "  ")             
             
-                    
-              
-            self._stdscr.refresh()
             if(chooseRow >lengthOfPage - 1):
                 chooseRow = 1
             elif(chooseRow <1):
                 chooseRow = lengthOfPage - 1
 
-            if(self._layer ==4 or self._layer ==5):
-                self._stdscr.addstr(6, 20, "Strength:")
-                self._stdscr.addstr(6, 29, self.passwordgenerator.passwordSafety(createPassword1))
-                self._stdscr.addstr(7, 20, "Criterias:")
-                self._stdscr.addstr(7, 30, self.passwordgenerator.containsEverything(createPassword1))
+            if(checkPassword == True):
+                self._stdscr.addstr(5, 30, createPassword1)
+                self._stdscr.addstr(6, 30, "Strength:")
+                self._stdscr.move(6, 39)
+                self._stdscr.clrtoeol()
+                self._stdscr.addstr(6, 39, self.passwordgenerator.passwordSafety(createPassword1))
+                self._stdscr.addstr(7, 30, "Criterias:")
+                self._stdscr.addstr(7, 40, str(self.passwordgenerator.containsEverything(createPassword1)))
             
             self._stdscr.addstr(self._lastChooseRow, 0, "    ")
             self._stdscr.addstr(chooseRow, 0, "--->")
+            self._stdscr.addstr(5, 0, str(self._layer))
             curses.curs_set(0)
             self._lastChooseRow = chooseRow
-        
+            self._stdscr.refresh()
 
         curses.nocbreak()
         stdscr.keypad(False)
