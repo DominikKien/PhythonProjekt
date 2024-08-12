@@ -9,29 +9,6 @@ accounts = ["Choose an Account","Tim", "Justin", "Dominik"]
 
 
 class Interface:
-    """"
-    def loadAccounts(self) -> None:
-        self._accounts = [] # Accounts laden
-        with open("source/Accounts.csv", mode='r', newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                account = Account( row['email'], row['phonenumber'])
-                self._accounts.append(account)
-                self._stdscr.addstr(row + 1, 5, account.email)
-                if(not self._accounts):
-
-    def createAccounts(self, email: str, phonenumber: str ) ->None:
-        print("I ran once")
-        with open("source/Accounts.csv", mode='w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = [ 'email', 'phonenumber']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            for account in self._accounts:
-                writer.writerow({
-                    'email': account.email,
-                    'phonenumber': account.phonenumber
-                    })
-                    self._stdscr.addstr( 1, 5, "No Accounts found")"""""
     def showList(self, layer:int) -> int:
         self._layer = layer
         self._stdscr.clear()
