@@ -8,20 +8,21 @@ class PasswordManager:
         self.encryption = Encryption(user.master_password_hash)
         self.storage = Storage(storage_file)
 
-    def add_entry(self, username: str, password: str, url: str, notes: str = "", category: str = ""):
+    def add_entry(self, name: str, password: str, url: str, notes: str = "", category: str = ""):
         encrypted_password = self.encryption.encrypt(password)
-        self.storage.add_password(username, encrypted_password, url, notes, category)
+        self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category)
 
-    def get_entry(self, username: str):
-        entry = self.storage.get_password(username)
+    def get_entry(self, name: str):
+        entry = self.storage.get_password(username=self.user.username, name=name)
         if entry:
             # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
-        return entry
+            return entry
+        return None
 
-    def update_entry(self, username: str, new_password: str):
+    def update_entry(self, name: str, new_password: str):
         encrypted_password = self.encryption.encrypt(new_password)
-        self.storage.update_password(username, encrypted_password)
+        self.storage.update_password(username=self.user.username, name=name, new_password=encrypted_password)
 
-    def delete_entry(self, username: str):
-        self.storage.delete_password(username)
+    def delete_entry(self, name: str):
+        self.storage.delete_password(username=self.user.username, name=name)
