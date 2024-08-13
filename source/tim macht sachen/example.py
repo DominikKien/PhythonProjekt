@@ -8,7 +8,7 @@ master_password = "SuperSecretMaster123!"
 
 # Create a user instance
 user = User(username=username, master_password=master_password)
-
+print(user.verify_master_password(username=username, master_password=master_password))
 # Step 2: Initialize the Password Manager for this user
 password_manager = PasswordManager(user=user)
 
