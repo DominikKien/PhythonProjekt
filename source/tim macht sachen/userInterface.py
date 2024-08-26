@@ -1,207 +1,266 @@
-# curses.beep() nicht gut, dass ich den Befehl gefunden habe
+"""Modul für Ein- und Ausgabe über Terminal"""
 import curses
-import csv
+from typing import List, Dict, Optional
 from user import User
 from password_manager import PasswordManager
 from passwordGenerator import PasswordGenerator
-import string
-
-accounts = ["Choose an Account","Tim", "Justin", "Dominik"]
 
 
+class Interface:
+    """
+    Diese Klasse erstellt eine GUI für einen PasswordManager
+    """
+    def __init__(self) -> None:
+        self.layer: int = 0
+        self.stdscr: curses.window
+        self._lastChooseRow: int
+        self.passwordgenerator: PasswordGenerator = PasswordGenerator(6)
 
-class Interface:    
-    def __init__(self, accounts: list):
-        print("I have been initialized")
-        self._accounts = accounts
-        self._layer = 0
-        self._stdscr = None
-        self.passwordgenerator = PasswordGenerator(6)
-        
-        
-        startPage = ["Welcome to Password Manager","Choose an Account","Create an Account",  "Close this application"]                                                  #0
-        createAccountPage = ["Create your Account","Type your Username","","Type your password","","Type your Password again","","Create Account","Generate password"]  #1
-        LoginAccountPage = ["Log into your Account","Type your Username","","Type your password","","LogIn"]                                                            #2
-        currentAccountPage = ["","Create a new Entry","Search per Name or URL for the plattform","","Search"]                                                           #3
-        newEntryPage =["New Entry","Type your Name for the plattform","","Type the url","","Assign a category","","Type the password","", "might want to add a short Note?","","Save"] #4
-        showPlattformPage =["Entry","Name of the plattform","","url:","","category","","password","", "Note","","Save","last edit",""]                                  #5
-        self._allPages = [startPage, createAccountPage, LoginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
-    
-    def showList(self, layer:int) -> int:
-        self._layer = layer
-        self._stdscr.clear()
+        self.chooseRow = 1
+        self.lengthOfPage = 0
+        self.key = ''
+        self.currentUser = User(username="", master_password="")
+        self.manager = PasswordManager(self.currentUser)
+
+        self.typeMode = False
+        self.userName = ""
+        self.createPassword1 = ""
+        self.createPassword2 = ""
+        self.masterpassword = ""
+
+        self.entry: Dict[str, str] = {
+            "username": "username",
+            "password": "Mein Passwort",
+            "url": "irgenwie Google",
+            "notes": "Leere Notiz",
+            "category": "category Schwarzwaelderkirsch",
+            "created_at": "Heute halt",
+            "history": ["gestern","heute","morgen"]
+        }
+
+        startPage: List[str] = ["Welcome to Password Manager", "Choose an Account", "Create an Account",  "Close this application"]
+        createAccountPage: List[str] = ["Create your Account", "Type your Username", "", "Type your password", "",
+                                         "Type your Password again", "", "Create Account", "Generate password"]
+        loginAccountPage: List[str] = ["Log into your Account", "Type your Username", "", "Type your password", "", "LogIn"]
+        currentAccountPage: List[str] = ["", "Create a new Entry", ""]
+        newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "Assign a category",
+                                    "", "Type the password", "", "Might want to add a short Note?", "", "Save"]
+        showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save", "last edit", ""]
+        self._allPages: List[List[str]] = [startPage, createAccountPage, loginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
+
+    def showList(self, layer: int) -> int:
+        """Gibt die Länge der ausgewählten Liste zurück und zeigt die Ausgewählte Liste im Terminal an"""
+        self.layer = layer
+        if self.stdscr is None:
+            raise ValueError("_stdscr is not initialized.")
+        self.stdscr.clear()
         currentPage = self._allPages[layer]
         length = len(currentPage)
-        self._stdscr.addstr(0, 0, currentPage[0])
+        self.stdscr.addstr(0, 0, currentPage[0])
         for i in range(1, length):
-            self._stdscr.addstr(i, 5, currentPage[i])
-        self._stdscr.refresh()
+            self.stdscr.addstr(i, 5, currentPage[i])
+        self.stdscr.refresh()
         self._lastChooseRow = 1
         curses.curs_set(0)
-        return length    
-    
-    def openAccount(self, username:str, password:str) -> PasswordManager:
+        return length
+
+    def extractData(self, data: Dict[str, str]) -> None:
+        """Fügt die Daten in der richtigen Liste hinzu"""
+        dataList = self._allPages[5]
+        dataList[2] = data["username"] #Wurde geändert
+        dataList[4] = data["url"]
+        dataList[6] = data["category"]
+        dataList[8] = data["password"]
+        dataList[10] = data["notes"]
+        dataList.extend(data["history"])
+        self._allPages[5] = dataList
+
+    def openAccount(self, username: str, password: str) -> PasswordManager:
         currentUser = User(username=username, master_password=password)
         passwordManager = PasswordManager(currentUser)
         return passwordManager
-    
-    def getData(self, data: list):
-        self._data = data
 
-    def start(self):
-        print("Starting the interface...")
+    def handleEnter(self) ->None:
+        """Kümmert sich um die Eingabe der Enter Taste"""
+        if 4 >= self.layer >= 1 and not self.typeMode:  # Enter ohne Schreibmodus aktiviert
+            if self.layer == 1 and self.chooseRow < 7:  # Account Erstelleingabe
+                self.stdscr.keypad(False)
+                self.typeMode = True
+            elif self.layer == 1 and self.chooseRow == 7:  # Account erstellen
+                self.stdscr.move(1, 30)
+                self.stdscr.clrtoeol()
+                if self.createPassword1 != self.createPassword2:  # Verifikation der Daten
+                    self.stdscr.addstr(1, 30, "Passwords don't match")
+                elif self.userName == "":
+                    self.stdscr.addstr(1, 30, "No Username given")
+                elif not self.passwordgenerator.containsEverything(self.createPassword1):
+                    self.stdscr.addstr(1, 30, "Criteria not completed")
+                else:
+                    self.stdscr.addstr(1, 30, "Account erstellt")
+                    self.currentUser = User(username=self.userName, master_password=self.createPassword1)  # Account erstellt
+            elif self.layer == 1 and self.chooseRow == 8:
+                self.createPassword1 = self.passwordgenerator.generate()
+                self.createPassword2 = self.createPassword1
+                self.stdscr.move(4, 4)
+                self.stdscr.clrtoeol()
+                self.stdscr.addstr(4, 4, self.createPassword2 + "  ")
+                self.stdscr.move(6, 4)
+                self.stdscr.clrtoeol()
+                self.stdscr.addstr(6, 4, self.createPassword2 + "  ")
+            elif self.layer == 2 and 0 < self.chooseRow < 5:  # Einloggen Eingabe
+                self.stdscr.keypad(False)
+                self.typeMode = True
+            elif self.layer == 2 and self.chooseRow == 5:  # Account öffnen
+                self.stdscr.addstr(1, 30, "Account öffnen")
+                self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
+        elif 4 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
+            self.stdscr.keypad(True)
+            self.typeMode = False
+        else:
+            self.key = "KEY_RIGHT"
+
+    def handleKeyRight(self)->bool:
+        """Kümmert sich um Pfeiltaste Rechts Eingabe"""
+        if self.layer == 0:  # Erste Page
+            if self.chooseRow == 1:  # Einloggen
+                self.lengthOfPage = self.showList(layer=2)
+            elif self.chooseRow == 2:  # Account erstellen
+                self.lengthOfPage = self.showList(layer=1)
+            elif self.chooseRow == 3:  # Schließen Speichern der Daten Hier
+                return True
+            elif self.layer == 3:
+                if self.chooseRow == 4:
+                    self.extractData(self.entry)
+                    self.lengthOfPage = self.showList(layer=5)
+        return False
+    def handleKeyLeft(self)->bool:
+        """Kümmer sich um Pfeiltaste Links Eingabe"""
+        if 3 > self.layer > 0:
+            self.userName = ""
+            self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
+        elif self.layer == 3:
+            self.lengthOfPage = self.showList(layer=1)  # Eine Seite zurück
+            # Hier auch noch Account schließen
+        elif 5 <= self.layer >= 4:
+            self.lengthOfPage = self.showList(layer=3)  # Eine Seite zurück
+        else:
+            return True  # Schließen auf der ersten Seite Speichern der Daten Hier
+        return False
+
+    def verifyPassword(self)->None:
+        """Verifiziert sein Passwort auf Stärke, Benutzer Zeichensatz
+            und Wie oft die ersten 5 Hashwerte gepawned wurden"""
+        self.stdscr.addstr(5, 30, self.createPassword1)
+        self.stdscr.addstr(6, 30, "Strength:")
+        self.stdscr.move(6, 39)
+        self.stdscr.clrtoeol()
+        self.stdscr.addstr(6, 39, self.passwordgenerator.passwordSafety(self.createPassword1))
+        self.stdscr.addstr(7, 30, "Criterias:")
+        self.stdscr.addstr(7, 40, str(self.passwordgenerator.containsEverything(self.createPassword1)))
+
+    def handleTypemode(self)->None:
+        """"Kümmert sich um die Eingabe, Aufruf nur wenn Schreibmodus aktiviert ist"""
+        checkPassword = False
+        if  self.layer == 1:  # Account Erstelleingaben
+            checkPassword = self.accountCreation()
+        elif self.layer == 2:  # Login Eingabe
+            if self.chooseRow in (1, 2):
+                if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
+                    self.userName = self.userName[:-1]
+                else:
+                    self.userName += self.key
+                self.stdscr.addstr(2, 4, self.userName + "  ")
+            elif self.chooseRow in (3, 4):
+                if self.key in('\b','\x7f', curses.KEY_BACKSPACE) :
+                    self.masterpassword = self.masterpassword[:-1]
+                else:
+                    self.masterpassword += self.key
+                self.stdscr.addstr(4, 4, self.masterpassword + "  ")
+        if checkPassword:
+            self.verifyPassword()
+
+    def accountCreation(self)->bool:
+        """"Eingabe der Accountdaten"""
+        checkPassword = False
+        if self.chooseRow in (1, 2):  # Username eingabe
+            if self.key in ('\b','\x7f',curses.KEY_BACKSPACE):
+                self.userName = self.userName[:-1]
+            elif len(self.key) == 1 and 32 <= ord(self.key) <= 126:
+                self.userName += self.key
+            self.stdscr.addstr(2, 4, self.userName + "  ")
+        elif self.chooseRow in (3, 4):  # password1
+            if self.key in('\b','\x7f',curses.KEY_BACKSPACE):
+                self.createPassword1 = self.createPassword1[:-1]
+                checkPassword = True
+            elif len(self.key) == 1 and 32 <= ord(self.key) <= 126:
+                self.createPassword1 += self.key
+                checkPassword = True
+            self.stdscr.addstr(4, 4, self.createPassword1 + "  ")
+        elif self.chooseRow in (5, 6):  # Password 2
+            if self.key in('\b','\x7f',curses.KEY_BACKSPACE) :
+                self.createPassword2 = self.createPassword2[:-1]
+            elif len(self.key) == 1 and 32 <= ord(self.key) <= 126:
+                self.createPassword2 += self.key
+            self.stdscr.addstr(6, 4, self.createPassword2 + "  ")
+        return checkPassword
+
+
+    def start(self) -> None:
+        """Startet das GUI"""
         curses.wrapper(self.main)
 
-    def main(self, stdscr):
-        self._stdscr = stdscr
+    def main(self, stdscr: curses.window) -> None:
+        """Wird von start aufgerufen, kümmert sich um die Reaktion auf Tastendrücke"""
+        self.stdscr = stdscr
         curses.noecho()
         curses.cbreak()
         stdscr.keypad(True)
         stdscr.clear()
+        self.lengthOfPage = self.showList(layer=0)
 
-        
-        lengthOfPage = self.showList(layer = 0)
-        typeMode = False
-        userName =""
-        createPassword1=""
-        createPassword2=""
-        masterpassword=""
         while True:
-            checkPassword = False
-            chooseRow = self._lastChooseRow
-            key = self._stdscr.getkey()
-            #self._stdscr.addstr(6, 0, key)
-            if(key == '\n' or key == '\r' or key == curses.KEY_ENTER ):#Enter
-                if( 4>= self._layer >=1 and typeMode == False):#Enter ohne Schreibmodus aktiviert
-                    if(self._layer == 1 and chooseRow < 7):#Account Erstelleeingabe
-                        stdscr.keypad(False)
-                        typeMode = True
-                    elif(self._layer == 1 and chooseRow ==7):#Account erstellen
-                        if(createPassword1 != createPassword2):
-                            self._stdscr.addstr(1, 30, "Passwords dont match")
-                        else:
-                            lengthOfPage = self.showList(4)
-                    elif(self._layer == 1 and chooseRow ==8):
-                        createPassword1 = self.passwordgenerator.generate()
-                        createPassword2 = createPassword1
-                        self._stdscr.move(4, 4)
-                        self._stdscr.clrtoeol()
-                        self._stdscr.addstr(4, 4, createPassword2+ "  ")
-                        self._stdscr.move(6, 4)
-                        self._stdscr.clrtoeol()
-                        self._stdscr.addstr(6, 4, createPassword2+ "  ")
-                    elif(self._layer == 2 and 0<chooseRow<5):#Einloggen Eingabe
-                        stdscr.keypad(False)
-                        typeMode = True
-                    elif(self._layer == 2 and chooseRow == 5):#Account öffnen
-                        self._stdscr.addstr(1, 30, "Account öffnen")
-                        manager = self.openAccount(username=userName, password=masterpassword)
-                elif(4>= self._layer >=1 and typeMode == True): #Eingabemodus verlassen
-                    stdscr.keypad(True)
-                    typeMode = False
-                else:
-                    key = "KEY_RIGHT"
-            elif(key == "KEY_UP"):#Up
-                chooseRow = chooseRow - 1
-            elif(key == "KEY_DOWN"):#Down
-                chooseRow = chooseRow + 1
-            elif(key == "KEY_LEFT"):#Left
-                if 3 > self._layer >0:
-                   userName =""
-                   lengthOfPage = self.showList(layer= 0)#Eine Seite zurück
-                elif(self._layer == 3):
-                    lengthOfPage = self.showList(layer= 1)#Eine Seite zurück
-                    #Hier auch noch Account schließen
-                elif(5 <= self._layer >=4):
-                    lengthOfPage = self.showList(layer= 3)#Eine Seite zurück
-                else:
-                    break#Schließen auf der ersten Seite Speichern der Daten Hier
+            self.chooseRow = self._lastChooseRow
+            if self.chooseRow is None:
+                self.chooseRow = 1
+            self.key = self.stdscr.getkey()
+            # self._stdscr.addstr(6, 0, key)
+            if self.key in ('\n', '\r', curses.KEY_ENTER):  # Enter
+                self.handleEnter()
+            elif self.key == "KEY_UP":  # Up
+                self.chooseRow -= 1
+            elif self.key == "KEY_DOWN":  # Down
+                self.chooseRow += 1
+            elif self.key == "KEY_LEFT":    # Left
+                if self.handleKeyLeft():
+                    break
+            elif self.key == "KEY_RIGHT":  # Right
+                if self.handleKeyRight():
+                    break
 
-            elif(key == "KEY_RIGHT"):#Right
-                if(self._layer == 0):#Erste Page
-                    if(chooseRow == 1):#Einloggen
-                        lengthOfPage = self.showList(layer = 2)
-                    elif(chooseRow == 2):#Account erstellen
-                        lengthOfPage = self.showList(layer= 1)
-                    elif(chooseRow == 3):#Schließen Speichern der Daten Hier
-                        break
-                elif(self._layer == 4):
-                    continue
+            # Der Ganze Rest der Tastatur dadrunter
+            elif self.typeMode:
+                self.handleTypemode()
 
-                #Der Ganze Rest der Tastatur dadrunter
-            elif(typeMode == True and self._layer == 1):#Account Erstelleingaben
-                if((chooseRow == 1 or chooseRow == 2) ):#Username eingabe
-                    if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
-                        userName = userName[:-1]
-                    elif len(key) == 1 and 32 <= ord(key) <= 126:
-                        userName = userName + key
-                    self._stdscr.addstr(2, 4, userName + "  ")
-                elif(chooseRow == 3 or chooseRow == 4):#password1
-                    if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
-                        createPassword1 = createPassword1[:-1]
-                        checkPassword = True
-                    elif len(key) == 1 and 32 <= ord(key) <= 126:
-                        createPassword1 = createPassword1 + key
-                        checkPassword = True
-                    self._stdscr.addstr(4, 4, createPassword1+ "  ")
-                elif(chooseRow == 5 or chooseRow == 6):#Password 2
-                    if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
-                        createPassword2 = createPassword2[:-1]
-                    elif len(key) == 1 and 32 <= ord(key) <= 126:
-                        createPassword2 = createPassword2 + key
-                    self._stdscr.addstr(6, 4, createPassword2+ "  ")
-            elif(typeMode == True and self._layer == 2):#Login Eingabe
-                if(chooseRow == 1 or chooseRow == 2):
-                    if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
-                        userName = userName[:-1]
-                    else:
-                        userName = userName + key
-                    self._stdscr.addstr(2, 4, userName+ "  ")
-                elif(chooseRow == 3 or chooseRow == 4):
-                    if(key == '\b' or key == '\x7f' or key == curses.KEY_BACKSPACE):
-                        masterpassword = masterpassword[:-1]
-                    else:
-                        masterpassword = masterpassword + key
-                self._stdscr.addstr(4, 4, masterpassword+ "  ")             
-            
-            if(chooseRow >lengthOfPage - 1):
-                chooseRow = 1
-            elif(chooseRow <1):
-                chooseRow = lengthOfPage - 1
+            if self.chooseRow > self.lengthOfPage - 1:
+                self.chooseRow = 1
+            elif self.chooseRow < 1:
+                self.chooseRow = self.lengthOfPage - 1
 
-            if(checkPassword == True):
-                self._stdscr.addstr(5, 30, createPassword1)
-                self._stdscr.addstr(6, 30, "Strength:")
-                self._stdscr.move(6, 39)
-                self._stdscr.clrtoeol()
-                self._stdscr.addstr(6, 39, self.passwordgenerator.passwordSafety(createPassword1))
-                self._stdscr.addstr(7, 30, "Criterias:")
-                self._stdscr.addstr(7, 40, str(self.passwordgenerator.containsEverything(createPassword1)))
-            
-            self._stdscr.addstr(self._lastChooseRow, 0, "    ")
-            self._stdscr.addstr(chooseRow, 0, "--->")
-            self._stdscr.addstr(5, 0, str(self._layer))
+            self.stdscr.addstr(self._lastChooseRow, 0, "    ")
+            self.stdscr.addstr(self.chooseRow, 0, "--->")
+            self.stdscr.addstr(5, 0, str(self.layer))
             curses.curs_set(0)
-            self._lastChooseRow = chooseRow
-            self._stdscr.refresh()
+            self._lastChooseRow = self.chooseRow
+            self.stdscr.refresh()
 
         curses.nocbreak()
         stdscr.keypad(False)
         curses.echo()
-    
 
 
-    
-                
-                
-
-def main():
-    interface = Interface(accounts=accounts)
+def main() -> None:
+    interface = Interface()
     interface.start()
-    ich = User("HI", "Ibins")
-    passworman = PasswordManager(user=ich)
-    print(passworman)
 
-    
 
 main()
