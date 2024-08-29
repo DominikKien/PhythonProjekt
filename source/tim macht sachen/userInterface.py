@@ -14,8 +14,10 @@ class Interface:
     def __init__(self) -> None:
         self.layer: int = 0
         self.stdscr: curses.window
-        self._lastChooseRow: int
+        self._lastChooseRow: int = 1
         self.passwordgenerator: PasswordGenerator = PasswordGenerator(6)
+        self.entryNumber:int
+        self.height:int = -2
 
         self.chooseRow = 1
         self.lengthOfPage = 0
@@ -39,11 +41,14 @@ class Interface:
             "history": ["gestern","heute","morgen"]
         }
 
+        self.plattform: List[str] = ["Netflix", "Instagram", "Kategorie 2", "MyLittlePony"]
+        self.isCategory: List[bool] = [False, False, True, False]
+
         startPage: List[str] = ["Welcome to Password Manager", "Choose an Account", "Create an Account",  "Close this application"]
         createAccountPage: List[str] = ["Create your Account", "Type your Username", "", "Type your password", "",
                                          "Type your Password again", "", "Create Account", "Generate password"]
         loginAccountPage: List[str] = ["Log into your Account", "Type your Username", "", "Type your password", "", "LogIn"]
-        currentAccountPage: List[str] = ["", "Create a new Entry", ""]
+        currentAccountPage: List[str] = ["", "Create a new Entry"]
         newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "Assign a category",
                                     "", "Type the password", "", "Might want to add a short Note?", "", "Save"]
         showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save", "last edit", ""]
@@ -56,14 +61,35 @@ class Interface:
             raise ValueError("_stdscr is not initialized.")
         self.stdscr.clear()
         currentPage = self._allPages[layer]
-        length = len(currentPage)
         self.stdscr.addstr(0, 0, currentPage[0])
-        for i in range(1, length):
+        for i in range(1, len(currentPage)):
+            if i == self.height:
+                self.stdscr.addstr(0, 50, "Please extend your terminal in height")
+                return i
             self.stdscr.addstr(i, 5, currentPage[i])
+            
         self.stdscr.refresh()
         self._lastChooseRow = 1
         curses.curs_set(0)
-        return length
+        return i
+    
+    def showEntry(self, entry:int, create: bool, height: int) -> int:
+        dataList = self._allPages[5]
+        key:int
+        if(not create):
+            self.extractData(self.entry)
+        for key, value in dataList.items():
+            self.stdscr.addstr(key, 20, value)
+
+            # Möglichkeit zur Modifikation des Eintrags
+            if isinstance(value, list):
+                # Wenn der Wert eine Liste ist
+                for i, item in enumerate(value):
+                    self.stdscr.addstr(key + i, 20, item)
+        return key
+                    
+        
+
 
     def extractData(self, data: Dict[str, str]) -> None:
         """Fügt die Daten in der richtigen Liste hinzu"""
@@ -81,24 +107,33 @@ class Interface:
         passwordManager = PasswordManager(currentUser)
         return passwordManager
 
-    def handleEnter(self) ->None:
-        """Kümmert sich um die Eingabe der Enter Taste"""
+    def handleEnter(self) ->bool:
+        """Kümmert sich um die Eingabe der Enter Taste
+        return Wert kann bei False andere Handle Taste aufrufen, Multikeyput"""
         if 4 >= self.layer >= 1 and not self.typeMode:  # Enter ohne Schreibmodus aktiviert
             if self.layer == 1 and self.chooseRow < 7:  # Account Erstelleingabe
                 self.stdscr.keypad(False)
                 self.typeMode = True
+                return True
             elif self.layer == 1 and self.chooseRow == 7:  # Account erstellen
                 self.stdscr.move(1, 30)
                 self.stdscr.clrtoeol()
                 if self.createPassword1 != self.createPassword2:  # Verifikation der Daten
                     self.stdscr.addstr(1, 30, "Passwords don't match")
+                    return True
                 elif self.userName == "":
                     self.stdscr.addstr(1, 30, "No Username given")
+                    return True
                 elif not self.passwordgenerator.containsEverything(self.createPassword1):
                     self.stdscr.addstr(1, 30, "Criteria not completed")
+                    return True
                 else:
                     self.stdscr.addstr(1, 30, "Account erstellt")
                     self.currentUser = User(username=self.userName, master_password=self.createPassword1)  # Account erstellt
+                    self._allPages[3][0] = self.userName
+                    self._allPages[3].extend(self.plattform)
+                    self.lengthOfPage = self.showList(3)
+                    return True
             elif self.layer == 1 and self.chooseRow == 8:
                 self.createPassword1 = self.passwordgenerator.generate()
                 self.createPassword2 = self.createPassword1
@@ -108,17 +143,21 @@ class Interface:
                 self.stdscr.move(6, 4)
                 self.stdscr.clrtoeol()
                 self.stdscr.addstr(6, 4, self.createPassword2 + "  ")
+                return True
             elif self.layer == 2 and 0 < self.chooseRow < 5:  # Einloggen Eingabe
                 self.stdscr.keypad(False)
                 self.typeMode = True
+                return True
             elif self.layer == 2 and self.chooseRow == 5:  # Account öffnen
                 self.stdscr.addstr(1, 30, "Account öffnen")
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
+                return True
         elif 4 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
             self.stdscr.keypad(True)
             self.typeMode = False
-        else:
-            self.key = "KEY_RIGHT"
+            return True
+        return False
+            
 
     def handleKeyRight(self)->bool:
         """Kümmert sich um Pfeiltaste Rechts Eingabe"""
@@ -130,9 +169,16 @@ class Interface:
             elif self.chooseRow == 3:  # Schließen Speichern der Daten Hier
                 return True
             elif self.layer == 3:
-                if self.chooseRow == 4:
-                    self.extractData(self.entry)
-                    self.lengthOfPage = self.showList(layer=5)
+                if self.chooseRow == 4:#Eintrag erstellen hier
+                    print("Hier fehlt noch was")                    
+        elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >0:
+            self.extractData(self.entry)
+            self.lengthOfPage = self.showList(5) #Plattform anzeigen 
+        elif self.layer == 5:
+            if(self.lengthOfPage >=self.chooseRow > 0):
+                self.entryNumber = 0
+                self.showEntry(entry=self.entryNumber, create=False)
+            
         return False
     def handleKeyLeft(self)->bool:
         """Kümmer sich um Pfeiltaste Links Eingabe"""
@@ -150,11 +196,12 @@ class Interface:
 
     def verifyPassword(self)->None:
         """Verifiziert sein Passwort auf Stärke, Benutzer Zeichensatz
-            und Wie oft die ersten 5 Hashwerte gepawned wurden"""
+            und Wie oft die ersten 5 Hashwerte gepawned wurden
+            beim Account erstellen"""
         self.stdscr.addstr(5, 30, self.createPassword1)
         self.stdscr.addstr(6, 30, "Strength:")
         self.stdscr.move(6, 39)
-        self.stdscr.clrtoeol()
+        self.stdscr.clrtoeol()#Befehl zum restliochen Zeileninhalt löschen
         self.stdscr.addstr(6, 39, self.passwordgenerator.passwordSafety(self.createPassword1))
         self.stdscr.addstr(7, 30, "Criterias:")
         self.stdscr.addstr(7, 40, str(self.passwordgenerator.containsEverything(self.createPassword1)))
@@ -217,16 +264,25 @@ class Interface:
         curses.cbreak()
         stdscr.keypad(True)
         stdscr.clear()
-        self.lengthOfPage = self.showList(layer=self.layer)
-
+        self.height, width = self.stdscr.getmaxyx()
+        oldheight:int = -2
         while True:
-            self.chooseRow = self._lastChooseRow
+            self.height, width = self.stdscr.getmaxyx()
+            if(oldheight != self.height):
+                self.lengthOfPage = self.showList(self.layer)
+                if(self.layer == 5):
+                    self.showEntry(self.entryNumber, False)
+                elif(self.layer == 4):
+                    self.showEntry(self.entrynumber, True)
+            oldheight = self.height
+            #self.chooseRow = self._lastChooseRow
             if self.chooseRow is None:
                 self.chooseRow = 1
             self.key = self.stdscr.getkey()
             # self._stdscr.addstr(6, 0, key)
             if self.key in ('\n', '\r', curses.KEY_ENTER):  # Enter
-                self.handleEnter()
+                if( not self.handleEnter()):
+                    self.handleKeyRight()
             elif self.key == "KEY_UP":  # Up
                 self.chooseRow -= 1
             elif self.key == "KEY_DOWN":  # Down
@@ -249,15 +305,15 @@ class Interface:
 
             self.stdscr.addstr(self._lastChooseRow, 0, "    ")
             self.stdscr.addstr(self.chooseRow, 0, "--->")
-            self.stdscr.addstr(5, 0, str(self.layer))
+           #self.stdscr.addstr(5, 0, str(self.layer))
             curses.curs_set(0)
             self._lastChooseRow = self.chooseRow
             self.stdscr.refresh()
 
         curses.nocbreak()
-        stdscr.keypad(False)
+        #stdscr.keypad(False)
         curses.echo()
-
+        
 
 def main() -> None:
     interface = Interface()

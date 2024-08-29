@@ -12,6 +12,7 @@ def printqrcode(stdscr: curses.window):
     while True:
         stdscr.clear()
         height, width = stdscr.getmaxyx()
+        #height = stdscr.getmaxyx()
 
         # Bestimme, wie viele Zeilen du gleichzeitig anzeigen kannst
         visible_lines = min(height, len(myList))
