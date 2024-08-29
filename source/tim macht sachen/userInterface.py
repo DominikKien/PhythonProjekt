@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 from user import User
 from password_manager import PasswordManager
 from passwordGenerator import PasswordGenerator
+from twoFactorAuth import TwoFactorAuth
 
 
 class Interface:
@@ -216,7 +217,7 @@ class Interface:
         curses.cbreak()
         stdscr.keypad(True)
         stdscr.clear()
-        self.lengthOfPage = self.showList(layer=0)
+        self.lengthOfPage = self.showList(layer=self.layer)
 
         while True:
             self.chooseRow = self._lastChooseRow
