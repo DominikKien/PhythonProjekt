@@ -30,22 +30,8 @@ print("Passwords added successfully!")
 user3 = User(username=username2, master_password=master_password2)
 password_manager3 = PasswordManager(user=user3)
 
-user4 = User(username=username, master_password=master_password)
-password_manager4 = PasswordManager(user=user4)
-
-github_entry = password_manager4.get_entry("github")
-gmail_entry = password_manager4.get_entry("gmail")
-
-print("\nRetrieved Passwords:")
-print(f"GitHub: {github_entry}")
-print(f"Gmail: {gmail_entry}")
-
-print(password_manager4.getAllEntryes())
-
 print("HIER")
 test = password_manager3.getAllEntryes()
-print(test[0])
-print(test[1])
 
 for i in test:
     entry = password_manager3.get_entry(i)
