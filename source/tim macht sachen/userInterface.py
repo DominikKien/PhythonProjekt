@@ -51,7 +51,7 @@ class Interface:
         currentAccountPage: List[str] = ["", "Create a new Entry"]
         newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "Assign a category",
                                     "", "Type the password", "", "Might want to add a short Note?", "", "Save"]
-        showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save", "last edit", ""]
+        showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save","created at","" "last edit", ""]
         self._allPages: List[List[str]] = [startPage, createAccountPage, loginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
 
     def showList(self, layer: int) -> int:
@@ -65,42 +65,38 @@ class Interface:
         for i in range(1, len(currentPage)):
             if i == self.height:
                 self.stdscr.addstr(0, 50, "Please extend your terminal in height")
+                
                 return i
             self.stdscr.addstr(i, 5, currentPage[i])
             
         self.stdscr.refresh()
         self._lastChooseRow = 1
         curses.curs_set(0)
-        return i
+        return i + 1
     
-    def showEntry(self, entry:int, create: bool, height: int) -> int:
-        dataList = self._allPages[5]
-        key:int
-        if(not create):
-            self.extractData(self.entry)
-        for key, value in dataList.items():
-            self.stdscr.addstr(key, 20, value)
-
-            # Möglichkeit zur Modifikation des Eintrags
-            if isinstance(value, list):
-                # Wenn der Wert eine Liste ist
-                for i, item in enumerate(value):
-                    self.stdscr.addstr(key + i, 20, item)
-        return key
+    def showEntry(self, create:bool,height: int, dataList:List = []) -> int:
+        """Zeigt den Eintrag an, falls Create True ist wird das Blanko angezeigt. Bei Create false muss Liste übergeben werden"""
+        if(create):#Standard DatenListe laden ansonsensten wird übergebene Liste benutzt
+            dataList = self._allPages[5].copy()
+        for i, value in enumerate(dataList):
+            if i == self.height:
+                self.stdscr.addstr(0, 50, "Please extend your terminal in height")
+                return i
+            self.stdscr.addstr(i, 40, value)
+        return 12 # Save Button
                     
-        
-
-
-    def extractData(self, data: Dict[str, str]) -> None:
+    def extractData(self, data: Dict[str, str]) -> List:
         """Fügt die Daten in der richtigen Liste hinzu"""
-        dataList = self._allPages[5]
-        dataList[2] = data["username"] #Wurde geändert
+        dataList:list
+        dataList = self._allPages[5].copy() 
+        dataList[2] = data["name"] #Wurde geändert
         dataList[4] = data["url"]
         dataList[6] = data["category"]
         dataList[8] = data["password"]
         dataList[10] = data["notes"]
+        dataList[13] = data["created_at"]
         dataList.extend(data["history"])
-        self._allPages[5] = dataList
+        return dataList
 
     def openAccount(self, username: str, password: str) -> PasswordManager:
         currentUser = User(username=username, master_password=password)
@@ -151,6 +147,9 @@ class Interface:
             elif self.layer == 2 and self.chooseRow == 5:  # Account öffnen
                 self.stdscr.addstr(1, 30, "Account öffnen")
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
+                self._allPages[3][0] = self.userName
+                self._allPages[3].extend(self.manager.getAllEntryes())
+                self.lengthOfPage = self.showList(3)
                 return True
         elif 4 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
             self.stdscr.keypad(True)
@@ -171,9 +170,8 @@ class Interface:
             elif self.layer == 3:
                 if self.chooseRow == 4:#Eintrag erstellen hier
                     print("Hier fehlt noch was")                    
-        elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >0:
-            self.extractData(self.entry)
-            self.lengthOfPage = self.showList(5) #Plattform anzeigen 
+        elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >1: #Einträge anzeigen
+            self.lengthOfPage = self.showEntry(create=False, height= self.height, dataList=self.extractData(self.manager.get_entry(self._allPages[3][self.chooseRow]))) #Plattform anzeigen 
         elif self.layer == 5:
             if(self.lengthOfPage >=self.chooseRow > 0):
                 self.entryNumber = 0
