@@ -147,9 +147,12 @@ class Interface:
             elif self.layer == 2 and self.chooseRow == 5:  # Account öffnen
                 self.stdscr.addstr(1, 30, "Account öffnen")
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
-                self._allPages[3][0] = self.userName
-                self._allPages[3].extend(self.manager.getAllEntryes())
-                self.lengthOfPage = self.showList(3)
+                if(self.manager.verify()):
+                    self._allPages[3][0] = self.userName
+                    self._allPages[3].extend(self.manager.getAllEntryes())
+                    self.lengthOfPage = self.showList(3)
+                else:
+                    self.stdscr.addstr(1, 30, "Wrong Account Name or Password")
                 return True
         elif 4 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
             self.stdscr.keypad(True)
