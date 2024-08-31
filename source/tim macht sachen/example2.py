@@ -24,3 +24,11 @@ password_manager = PasswordManager(user=user)
 print(password_manager3.verify())
 
 print(password_manager.verify())
+
+username = "hello"
+password = "SuperSecretMaster1!2"
+
+user = User(username=username, master_password=password)
+password_manager = PasswordManager(user=user)
+
+print(password_manager.verify())

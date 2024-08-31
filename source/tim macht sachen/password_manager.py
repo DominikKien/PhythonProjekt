@@ -8,19 +8,19 @@ class PasswordManager:
         self.encryption = Encryption(user.master_password_hash)
         self.storage = Storage(storage_file)
 
-        
-
-
     def verify(self) -> bool:
-        verify = self.get_entry("verify")
-        if verify:
-            if verify["password"] == "verify":
-                return True
+        if len(self.getAllEntryes()) > 0:
+            verify = self.get_entry("verify")
+            if verify:
+                if verify["password"] == "verify":
+                    return True
+                else:
+                    return False
             else:
-                return False
-        else:
-            self.add_entry("verify", "verify", "", "", "")
-            return True
+                self.add_entry("verify", "verify", "", "", "")
+                return True
+        else: 
+            return False
         '''
         verify = self.getAllEntryes()
         print(verify)
