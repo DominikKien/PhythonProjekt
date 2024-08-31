@@ -13,7 +13,7 @@ class PasswordManager:
         self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category)
 
     def get_entry(self, name: str):
-        entry = self.storage.get_password(username=self.user.username, name=name)
+        entry = self.storage.getEntry(username=self.user.username, name=str(name))
         if entry:
             # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
@@ -26,3 +26,7 @@ class PasswordManager:
 
     def delete_entry(self, name: str):
         self.storage.delete_password(username=self.user.username, name=name)
+    
+    def getAllEntryes(self):
+        save = self.storage.getAllEntryes(self.user.username)
+        return save

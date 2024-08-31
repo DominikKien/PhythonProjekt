@@ -32,12 +32,19 @@ class Storage:
         self.data[username].append(entry)
         self.save_data()
 
-    def get_password(self, username: str, name: str) -> Dict:
+    def getEntry(self, username: str, name: str) -> Dict:
         user_entries = self.data.get(username, [])
         for entry in user_entries:
             if entry["name"] == name:
                 return entry
         return None
+    
+    def getAllEntryes(self, username:str):
+        save = []
+        user_entries = self.data.get(username, [])
+        for entry in user_entries:
+            save.append(entry["name"])
+        return save
 
     def update_password(self, username: str, name: str, new_password: str):
         user_entries = self.data.get(username, [])
