@@ -8,6 +8,30 @@ class PasswordManager:
         self.encryption = Encryption(user.master_password_hash)
         self.storage = Storage(storage_file)
 
+    def verify(self) -> bool:
+        if len(self.getAllEntryes()) > 0:
+            verify = self.get_entry("verify")
+            if verify:
+                if verify["password"] == "verify":
+                    return True
+                else:
+                    return False
+            else:
+                self.add_entry("verify", "verify", "", "", "")
+                return True
+        else: 
+            return False
+        '''
+        verify = self.getAllEntryes()
+        print(verify)
+        if len(verify) > 0:
+            return True
+        else:
+            print("delete account")
+            return False
+'''
+
+    
     def add_entry(self, name: str, password: str, url: str, notes: str = "", category: str = ""):
         encrypted_password = self.encryption.encrypt(password)
         self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category)
