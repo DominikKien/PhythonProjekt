@@ -64,20 +64,19 @@ class PasswordManager:
         return save
 
     def getAllEntriesByUrl(self, url) -> list:
+        '''earches for all Passwords which contain this url'''
         entryes = self.getAllEntryes()
-        entryes = entryes.remove("verify")
         urls = []
-        for i in entryes:
+        for i in entryes.remove("verify"):
             if str(url) in str(entryes[self.getEntry(i)["url"]]):
                 url.append(i)
         return urls
 
     def getAllEntriesByName(self,name) -> list:
+        '''searches for all Passwords which contain this name'''
         entryes = self.getAllEntryes()
-        entryes = entryes.remove("verify")
         names = []
-        for i in entryes:
+        for i in entryes.remove("verify"):
             if str(name) in str(i):
                 names.append(i)
         return names
-        
