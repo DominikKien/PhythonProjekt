@@ -22,7 +22,7 @@ class Interface:
         self.chooseRow = 1
         self.lengthOfPage = 0
         self.key = ''
-        self.currentUser = User(username="", master_password="")
+        self.currentUser = User(username="",masterPassword="")
         self.manager = PasswordManager(self.currentUser)
 
         self.typeMode = False
