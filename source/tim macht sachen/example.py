@@ -9,6 +9,7 @@ master_password = "SuperSecretMaster123!"
 # Create a user instance
 user = User(username=username, master_password=master_password)
 password_manager = PasswordManager(user=user)
+print(password_manager.verify())
 
 
 
@@ -24,7 +25,7 @@ username2 = "newName2"
 master_password2 = "SuperSecretMaster123!2"
 user2 = User(username=username2, master_password=master_password2)
 password_manager = PasswordManager(user=user2)
-
+print(password_manager.verify())
 
 password_manager.add_entry(name="github", password="GitHubPassword1!", url="https://github.com", notes="Personal GitHub account")
 password_manager.add_entry(name="gmail", password="GmailPassword1!", url="https://mail.google.com", notes="Personal Gmail account")
@@ -36,9 +37,10 @@ master_password2 = "SuperSecretMaster123!2"
 
 user3 = User(username=username2, master_password=master_password2)
 password_manager3 = PasswordManager(user=user3)
+print(password_manager3.verify())
 
 print("HIER")
-test = password_manager3.getAllEntryes()
+test = password_manager3.getAllEntryes().remove("verify")
 print(test)
 for i in test:
     entry = password_manager3.get_entry(i)

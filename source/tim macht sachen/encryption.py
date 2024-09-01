@@ -34,9 +34,10 @@ class Encryption:
         data = urlsafe_b64decode(ciphertext.encode('latin-1'))
         salt = data[:16]  # Extract the salt
         iv = data[16:32]  # Extract the IV
-        ciphertext = data[32:]  # Extract the ciphertext
+
+        myBytes = data[32:]  # Extract the ciphertext
         key = self.derive_key(self.master_password, salt)
         cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=self.backend)
         decryptor = cipher.decryptor()
-        plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+        plaintext = decryptor.update(myBytes) + decryptor.finalize()
         return plaintext.decode('latin-1')
