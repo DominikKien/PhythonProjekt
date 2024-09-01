@@ -30,7 +30,7 @@ class TestInterface(unittest.TestCase):
         stdscr = curses.initscr()
         interface.stdscr = stdscr
         length = interface.showList(layer=0)
-        self.assertEqual(length, len(interface._allPages[0]))
+        self.assertEqual(length, len(interface.allPages[0]))
 
     def test_extractData(self):
         interface = Interface()
@@ -44,7 +44,7 @@ class TestInterface(unittest.TestCase):
             "history": ["gestern", "heute", "morgen"]
         }
         interface.extractData(data)
-        self.assertEqual(interface._allPages[5][2], "user1")
+        self.assertEqual(interface.allPages[5][2], "user1")
 
     @patch('curses.initscr')
     def test_handleEnter(self, mock_initscr):

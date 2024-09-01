@@ -15,6 +15,7 @@ class Interface:
         self.stdscr: curses.window
         self._lastChooseRow: int = 1
         self.passwordgenerator: PasswordGenerator = PasswordGenerator(6)
+        self.entryGenerator: PasswordGenerator = PasswordGenerator(6)
         self.entryNumber:int
         self.height:int = -2
         self.offset = 0 # Offset der Pfeile bei Entrys
@@ -36,6 +37,15 @@ class Interface:
         self.category:str = ""
         self.note:str = ""
 
+        self.excludeCharacters:str =""
+        self.length:str = "6"
+        self.useCapitals:bool = True
+        self.useNumber:bool = True
+        self.useSpechialCharacters: bool = True
+
+        self.searchUrl:str = ""
+        self.searchName:str = ""
+
         self.dataList: List[str]
         self.usedAccountPage: List[str]
         startPage: List[str] = ["Welcome to Password Manager", "Choose an Account", "Create an Account",  "Close this application","export","import"]
@@ -44,10 +54,12 @@ class Interface:
         loginAccountPage: List[str] = ["Log into your Account", "Type your Username", "", "Type your password", "", "LogIn"]
         currentAccountPage: List[str] = ["", "Create a new Entry","Search for URL","","Search for Name","","reset searches"]
         newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "might assign a category",
-                                    "", "Type the password", "", "Might want to add a short Note?", "", "Save","Generate password"]
+                                    "", "Type the password", "", "Might want to add a short Note?", "", "Save","Generate password",
+                                    "Use Capital Letters?","Use Numbers?","Use Special Characters","Minimum length","","Exclude Characters",""]
         showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "",
-                                         "Save","delete","created at","","last edit", ""]
-        self._allPages: List[List[str]] = [startPage, createAccountPage, loginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
+                                         "Save","delete","Use Capital Letters?","Use Numbers?","Use Special Characters",
+                                         "Minimum length","","Exclude Characters","","created at","","last edit", ""]
+        self.allPages: List[List[str]] = [startPage, createAccountPage, loginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
 
     def showList(self, layer: int) -> int:
         """Gibt die Länge der ausgewählten Liste zurück und zeigt die Ausgewählte Liste im Terminal an"""
@@ -60,7 +72,7 @@ class Interface:
             currentPage = self.usedAccountPage
             self.layer = 3
         else:
-            currentPage = self._allPages[layer]
+            currentPage = self.allPages[layer]
             self.layer = layer
         self.stdscr.addstr(0, 0, currentPage[0])
         for i in range(1, len(currentPage)):
@@ -85,18 +97,18 @@ class Interface:
     def showEntry(self, create:bool,height: int) -> int:
         """Zeigt den Eintrag an, falls Create True ist wird das Blanko angezeigt. Bei Create false muss Liste übergeben werden"""
         if create:#Standard DatenListe laden ansonsensten wird übergebene Liste benutzt
-            self.dataList = self._allPages[4].copy()
+            self.dataList = self.allPages[4].copy()
         for i, value in enumerate(self.dataList):
             if i == height:
                 self.stdscr.addstr(0, 50, "Please extend your terminal in height")
                 return i
             self.stdscr.addstr(i, 40, value)
-        return 13 # Save Button
+        return 20 # Ende der Auswahlmöglichkeiten
 
     def extractData(self, data: Dict[str, str]) -> List:
         """Fügt die Daten in der richtigen Liste hinzu"""
         dataList:list
-        dataList = self._allPages[5].copy()
+        dataList = self.allPages[5].copy()
         dataList[2] = data["name"]
         self.entryName = data["name"]
         dataList[4] = data["url"]
@@ -107,7 +119,7 @@ class Interface:
         self.createPassword1 = data["password"]
         dataList[10] = data["notes"]
         self.note = data["notes"]
-        dataList[14] = data["created_at"]
+        dataList[21] = data["created_at"]
         dataList.extend(data["history"])
         return dataList
 
@@ -143,7 +155,7 @@ class Interface:
                     self.stdscr.addstr(1, 30, "Account existiert schon")
                     return True
                 self.stdscr.addstr(1, 30, "Account erstellt")
-                self._allPages[3][0] = self.userName
+                self.allPages[3][0] = self.userName
                 self.lengthOfPage = self.showList(3)
                 return True
             if self.layer == 1 and self.chooseRow == 8:
@@ -163,8 +175,8 @@ class Interface:
             if self.layer == 2 and self.chooseRow == 5:  # Account öffnen Login
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
                 if self.manager.existingAccountValid():
-                    self._allPages[3][0] = self.userName
-                    self.usedAccountPage = self._allPages[3].copy()
+                    self.allPages[3][0] = self.userName
+                    self.usedAccountPage = self.allPages[3].copy()
                     self.usedAccountPage.extend(self.manager.getAllEntryes())
                     self.lengthOfPage = self.showList(3)
                 else:
@@ -175,16 +187,51 @@ class Interface:
                 self.typeMode = True
                 return True
             if self.layer == 3 and self.chooseRow == 6:
-                print("reset Search Stuff")
-            if self.layer in(4,5) and 1 <= self.chooseRow <= 10:  # Einloggen Eingabe
+                self.usedAccountPage = self.allPages[3].copy()
+                self.usedAccountPage.extend(self.manager.getAllEntryes())
+                self.lengthOfPage = self.showList(3)
+            if self.layer in (4,5) and 1 <= self.chooseRow <= 10:  # Einloggen Eingabe
+                self.stdscr.keypad(False)
+                self.typeMode = True
+                return True
+            if self.layer in (4,5) and self.chooseRow == 13: #Use Capital
+                self.useCapitals = not self.useCapitals
+                self.stdscr.addstr(13, 60, str(self.useCapitals) + " ")
+                return True
+            if self.layer in (4,5) and self.chooseRow == 14: #Use Capital
+                self.useNumber= not self.useNumber
+                self.stdscr.addstr(14, 60, str(self.useNumber) + " ")
+                return True
+            if self.layer in (4,5) and self.chooseRow == 15: #Use Capital
+                self.useSpechialCharacters= not self.useSpechialCharacters
+                self.stdscr.addstr(15, 65, str(self.useSpechialCharacters) + " ")
+                return True
+            if self.layer in (4,5) and self.chooseRow in (16,17,18,19):#Eingabe für length und exclude
                 self.stdscr.keypad(False)
                 self.typeMode = True
                 return True
         if 5 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
             self.stdscr.keypad(True)
             self.typeMode = False
-            if self.layer == 3 and self.chooseRow in (2,3,4,5): #Suche ausführen
-                print("hier wird die Suche dann ausgeführt")
+            if self.layer == 3 and self.chooseRow in (2,3): #Suche ausführen für url
+                self.usedAccountPage = self.allPages[3].copy()
+                self.usedAccountPage.extend(self.manager.getAllEntriesByUrl(self.searchUrl))
+                self.searchUrl =""
+                self.lengthOfPage = self.showList(3)
+            if self.layer == 3 and self.chooseRow in (4,5):#Suche für Namen ausführen
+                self.usedAccountPage = self.allPages[3].copy()
+                self.usedAccountPage.extend(self.manager.getAllEntriesByName(self.searchName))
+                self.searchName =""
+                self.lengthOfPage = self.showList(3)
+            if self.layer in (4,5):
+                self.entryGenerator = PasswordGenerator(length=int(self.length), useCapitals= self.useCapitals, useNumbers=self.useNumber,
+                                                        useSpecialCharacters=self.useSpechialCharacters)
+                self.entryGenerator.excludeCharacters(self.excludeCharacters)
+                self.excludeCharacters:str =""
+                self.length:str = "6"
+                self.useCapitals:bool = True
+                self.useNumber:bool = True
+                self.useSpechialCharacters: bool = True
             return True
         return False
 
@@ -215,19 +262,19 @@ class Interface:
             self.createPassword1 =""
             self.lengthOfPage = self.showEntry(create=True, height=self.height)
         elif self.layer == 4  and self.chooseRow == 11:#Save new Entry
-            if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
+            if(self.entryName != "" and self.entryGenerator.containsEverything(self.createPassword1)):
                 self.manager.addEntry(name = self.entryName, password=self.createPassword1, url= self.url, notes = self.note, category=self.category)
-                self.usedAccountPage = self._allPages[3].copy()
+                self.usedAccountPage = self.allPages[3].copy()
                 self.usedAccountPage.extend(self.manager.getAllEntryes())
                 self.usedAccountPage.remove("verify")
                 self.lengthOfPage = self.showList(99)
             else:
                 self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
         elif self.layer == 5 and self.chooseRow == 11:#Save changend Entry
-            if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
+            if(self.entryName != "" and self.entryGenerator.containsEverything(self.createPassword1)):
                 self.manager = PasswordManager(user = self.currentUser)
-                self.manager.updateEntry(name = self.entryName, new_password=self.createPassword1)
-                self.usedAccountPage = self._allPages[3].copy()
+                self.manager.updateEntry(name = self.entryName, newPassword=self.createPassword1)
+                self.usedAccountPage = self.allPages[3].copy()
                 self.usedAccountPage.extend(self.manager.getAllEntryes())
                 self.usedAccountPage.remove("verify")
                 self.lengthOfPage = self.showList(99)
@@ -235,24 +282,28 @@ class Interface:
                 self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
         elif  self.layer == 5 and self.chooseRow == 12:#Delete
             self.manager.deleteEntry(self.entryName)
-            self.usedAccountPage = self._allPages[3].copy()
+            self.usedAccountPage = self.allPages[3].copy()
             self.usedAccountPage.extend(self.manager.getAllEntryes())
             self.usedAccountPage.remove("verify")
             self.lengthOfPage = self.showList(99)
         elif self.layer == 4 and self.chooseRow == 12:
-            self.createPassword1 = self.passwordgenerator.generate()
+            self.createPassword1 = self.entryGenerator.generate()
             self.stdscr.addstr(8, 40, self.createPassword1 + "  ")           
         return False
     def handleKeyLeft(self)->bool:
         """Kümmer sich um Pfeiltaste Links Eingabe"""
+        self.stdscr.addstr(0, 30, str(self.layer))
         if 3 > self.layer > 0:
             self.userName = ""
             self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
         elif self.layer == 3:
             self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
             # Hier auch noch Account schließen
-        elif 5 <= self.layer >= 4:
-            self.lengthOfPage = self.showList(layer=3)  # Eine Seite zurück
+        elif self.layer in (4,5):
+            self.usedAccountPage = self.allPages[3].copy()
+            self.usedAccountPage.extend(self.manager.getAllEntryes())
+            self.usedAccountPage.remove("verify")
+            self.lengthOfPage = self.showList(99)
             self.offset = 0
         else:
             return True  # Schließen auf der ersten Seite Speichern der Daten Hier
@@ -287,6 +338,19 @@ class Interface:
                 else:
                     self.masterpassword += self.key
                 self.stdscr.addstr(4, 4, self.masterpassword + "  ")
+        elif self.layer == 3:  # Login Eingabe
+            if self.chooseRow in (2, 3):
+                if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
+                    self.searchUrl = self.searchUrl[:-1]
+                else:
+                    self.searchUrl += self.key
+                self.stdscr.addstr(3, 4, self.searchUrl + "  ")
+            elif self.chooseRow in (4,5):
+                if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
+                    self.searchName = self.searchName[:-1]
+                else:
+                    self.searchName += self.key
+                self.stdscr.addstr(3, 4, self.searchName + "  ")
         elif self.layer in(4,5):
             if self.chooseRow in (1, 2):
                 if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
@@ -320,6 +384,18 @@ class Interface:
                 else:
                     self.note += self.key
                 self.stdscr.addstr(10, 40, self.note + "  ")
+            elif self.chooseRow in (16,17):
+                if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
+                    self.length = self.length[:-1]
+                else:
+                    self.length += self.key
+                self.stdscr.addstr(17, 40, self.length + "  ")
+            elif self.chooseRow in (18,19):
+                if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
+                    self.excludeCharacters = self.length[:-1]
+                else:
+                    self.excludeCharacters += self.key
+                self.stdscr.addstr(19, 40, self.excludeCharacters + "  ")
         if checkPassword:
             self.verifyPassword()
 
@@ -368,16 +444,14 @@ class Interface:
                 if self.layer < 4:
                     self.lengthOfPage = self.showList(self.layer)
                 elif self.layer == 5:
-                    self.dataList = self.extractData(self.manager.getEntry(self._allPages[3][self.entryNumber]))
+                    self.dataList = self.extractData(self.manager.getEntry(self.allPages[3][self.entryNumber]))
                     self.showEntry(create=False, height = self.height)
                 elif self.layer == 4:
                     self.showEntry(create=True, height = self.height)
             oldheight = self.height
-            #self.chooseRow = self._lastChooseRow
             if self.chooseRow is None:
                 self.chooseRow = 1
             self.key = self.stdscr.getkey()
-            # self._stdscr.addstr(6, 0, key)
             if self.key in ('\n', '\r', curses.KEY_ENTER):  # Enter
                 if not self.handleEnter():
                     self.handleKeyRight()
@@ -403,6 +477,7 @@ class Interface:
 
             self.stdscr.addstr(self._lastChooseRow, self.offset, "    ")
             self.stdscr.addstr(self.chooseRow, self.offset, "--->")
+            self.stdscr.addstr(0, 20, str(self.layer))
            #self.stdscr.addstr(5, 0, str(self.layer))
             curses.curs_set(0)
             self._lastChooseRow = self.chooseRow
@@ -411,6 +486,7 @@ class Interface:
         curses.nocbreak()
         #stdscr.keypad(False)
         curses.echo()
+        
 
 
 def main() -> None:
