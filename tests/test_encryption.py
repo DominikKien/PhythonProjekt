@@ -1,8 +1,8 @@
 #pylint: disable=C
 import unittest
-
-# Annahme, dass die Klasse Encryption im gleichen Verzeichnis ist
-from encryption import Encryption  
+import sys
+sys.path.append('../')
+from source.encryption import Encryption  
 
 class TestEncryption(unittest.TestCase):
     def setUp(self) -> None:
@@ -11,7 +11,7 @@ class TestEncryption(unittest.TestCase):
 
     def test_derive_key(self) -> None:
         salt: bytes = b'fixed_salt_value'
-        key: bytes = self.encryption.derive_key(self.masterPassword, salt)
+        key: bytes = self.encryption.deriveKey(self.masterPassword, salt)
         self.assertEqual(len(key), 32) 
 
     def test_encrypt_decrypt(self) -> None:

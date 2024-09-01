@@ -2,8 +2,10 @@
 import unittest
 import string
 import sys
-sys.path.append('../source')
-from passwordGenerator import PasswordGenerator
+sys.path.append('../')
+from source.passwordGenerator import PasswordGenerator
+from source.passwordGenerator import haveIBeenPwned
+
 
 class TestPasswordGenerator(unittest.TestCase):
     def setUp(self) -> None:
@@ -25,8 +27,8 @@ class TestPasswordGenerator(unittest.TestCase):
         self.assertEqual(self.passGenSC.chars, string.ascii_lowercase + string.ascii_uppercase + string.digits + "%+'-/!,$_")
     
     def test_haveIBeenPwned(self) -> None:
-        self.assertTrue(self.passGenLower.haveIBeenPwned("1234") > 0)
-        self.assertTrue(self.passGenLower.haveIBeenPwned("Xcsiiajsh/&T++*78d.ga,scehw$48e/978rw§tzgfc") == 0)
+        self.assertTrue(haveIBeenPwned("1234") > 0)
+        self.assertTrue(haveIBeenPwned("Xcsiiajsh/&T++*78d.ga,scehw$48e/978rw§tzgfc") == 0)
 
 
     def test_excludeCharacters(self) -> None:
@@ -50,13 +52,13 @@ class TestPasswordGenerator(unittest.TestCase):
 
     def test_containsEverything(self) -> None:
         self.assertTrue(self.passGenLower.containsEverything("abc"))
-        self.assertTrue(self.passGenLower.containsEverything("aBc"))
-        self.assertTrue(self.passGenLower.containsEverything("aBc123"))
-        self.assertTrue(self.passGenLower.containsEverything("aBc123."))
+        self.assertTrue(self.passGenUpper.containsEverything("aBc"))
+        self.assertTrue(self.passGenNumbers.containsEverything("aBc123"))
+        self.assertTrue(self.passGenSC.containsEverything("aBc123!"))
 
-        self.assertFalse(self.passGenLower.containsEverything("abc"))
-        self.assertFalse(self.passGenLower.containsEverything("aBc"))
-        self.assertFalse(self.passGenLower.containsEverything("aBc123"))
+        self.assertFalse(self.passGenUpper.containsEverything("abc"))
+        self.assertFalse(self.passGenNumbers.containsEverything("aBc"))
+        self.assertFalse(self.passGenSC.containsEverything("aBc123"))
     
 
     def test_passwordSafety(self) -> None:
@@ -64,7 +66,7 @@ class TestPasswordGenerator(unittest.TestCase):
         passUpper = self.passGenUpper.generate()
         passNumbers = self.passGenNumbers.generate()
         passSC = self.passGenSC.generate()
-        breachMessage = f"Password has been breached {self.passGenLower.haveIBeenPwned('12345')} times."
+        breachMessage = f"Password has been breached {haveIBeenPwned('12345')} times."
         self.assertEqual(self.passGenLower.passwordSafety("12345"), breachMessage)
         self.assertEqual(self.passGenLower.passwordSafety(passLower), "weak")
         self.assertEqual(self.passGenUpper.passwordSafety(passUpper), "OK")
