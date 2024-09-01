@@ -1,6 +1,7 @@
 from password_manager import PasswordManager
 from user import User
-'''
+
+
 # Step 1: Create a new user with a master password
 username = "newName"
 master_password = "SuperSecretMaster123!"
@@ -30,7 +31,6 @@ password_manager.add_entry(name="gmail", password="GmailPassword1!", url="https:
 
 print("Passwords added successfully!")
 
-'''
 username2 = "newName2"
 master_password2 = "SuperSecretMaster123!2"
 
@@ -39,7 +39,6 @@ password_manager3 = PasswordManager(user=user3)
 
 print("HIER")
 test = password_manager3.getAllEntryes()
-test.remove("verify")
 print(test)
 for i in test:
     entry = password_manager3.get_entry(i)

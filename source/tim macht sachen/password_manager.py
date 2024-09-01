@@ -39,7 +39,9 @@ class PasswordManager:
         else:
             encrypted_password = self.encryption.encrypt(password)
             encrypted_datetime = self.encryption.encrypt(datetime.now().isoformat())
-            self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category, datetime = encrypted_datetime)
+            encrypted_url = self.encryption.encrypt(url)
+            self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=encrypted_url, notes=notes, category=category, datetime = encrypted_datetime)
+            self.verify()
             return True
 
     def get_entry(self, name: str):
@@ -48,6 +50,7 @@ class PasswordManager:
             # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
             entry['created_at'] = self.encryption.decrypt(entry['created_at'])
+            entry['url'] = self.encryption.decrypt(entry['url'])
             return entry
         return None
 
