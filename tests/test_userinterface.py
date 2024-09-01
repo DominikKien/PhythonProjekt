@@ -1,46 +1,96 @@
-# .coveragerc
+import unittest
+from unittest.mock import MagicMock, patch
+from source.userInterface import Interface
 
-[run]
-# Verzeichnisse und Dateien, die von der Coverage-Messung ausgeschlossen werden sollen
-omit =
-    tests/*
-    */__init__.py
-    */migrations/*
-    */venv/*
-    */env/*
-    */.venv/*
-    */.env/*
+class TestInterface(unittest.TestCase):
+    def setUp(self):
+        # Initialisieren des Interface-Objekts
+        self.interface = Interface()
+        self.interface.stdscr = MagicMock()
+        self.interface.stdscr.getmaxyx = MagicMock(return_value=(20, 80))
+        self.interface.stdscr.getkey = MagicMock(return_value='KEY_UP')
 
-# Quellverzeichnisse, auf die die Coverage angewendet wird
-source =
-    dein_paket_name  # Ersetze dies mit dem tatsächlichen Namen deines Pakets
+    def test_showList(self):
+        self.interface.stdscr.clear = MagicMock()
+        self.interface.showList(layer=0)
+        self.interface.stdscr.addstr.assert_called()
 
-branch = True
-parallel = True
+    def test_showList_with_empty_stdscr(self):
+        self.interface.stdscr = None
+        with self.assertRaises(ValueError):
+            self.interface.showList(layer=0)
 
-[report]
-# Zeilen, die von der Coverage-Berichterstattung ausgeschlossen werden
-exclude_lines =
-    # Deaktivieren der Standard-Pragma
-    pragma: no cover
+    def test_handleEnter_account_creation(self):
+        # Simulieren der Bedingungen für Account-Erstellung
+        self.interface.layer = 1
+        self.interface.chooseRow = 7
+        self.interface.createPassword1 = 'password123'
+        self.interface.createPassword2 = 'password123'
+        self.interface.userName = 'test_user'
+        self.interface.passwordgenerator.containsEverything = MagicMock(return_value=True)
+        self.interface.manager.newAccountValid = MagicMock(return_value=True)
+        
+        with patch('interface.User') as MockUser, patch('interface.PasswordManager') as MockPasswordManager:
+            MockUser.return_value = MagicMock()
+            MockPasswordManager.return_value = MagicMock()
+            
+            result = self.interface.handleEnter()
+            self.assertTrue(result)
+            MockUser.assert_called_with(username='test_user', masterPassword='password123')
+            MockPasswordManager.assert_called_with(user=MockUser.return_value)
 
-    # Keine Warnungen für fehlende Debugging-Codezeilen
-    def __repr__
-    if self\.debug
+    def test_handleEnter_account_creation_fail(self):
+        # Test für fehlgeschlagene Account-Erstellung
+        self.interface.layer = 1
+        self.interface.chooseRow = 7
+        self.interface.createPassword1 = 'password123'
+        self.interface.createPassword2 = 'password456'  # Passwords mismatch
+        self.interface.userName = 'test_user'
+        self.interface.passwordgenerator.containsEverything = MagicMock(return_value=True)
+        
+        result = self.interface.handleEnter()
+        self.assertTrue(result)
+        self.interface.stdscr.addstr.assert_called_with(1, 30, "Passwords don't match")
 
-    # Keine Warnungen, wenn Tests bestimmte Codezeilen nicht abdecken
-    raise NotImplementedError
-    if TYPE_CHECKING:
+    def test_handleKeyRight(self):
+        self.interface.layer = 0
+        self.interface.chooseRow = 1
+        with patch('interface.PasswordManager') as MockPasswordManager:
+            MockPasswordManager.return_value = MagicMock()
+            self.interface.handleKeyRight()
+            self.interface.showList.assert_called_with(layer=2)
 
-# Berichtseinstellungen
-show_missing = True
-skip_covered = True
-precision = 2
+    def test_handleKeyLeft(self):
+        self.interface.layer = 3
+        self.interface.chooseRow = 1
+        self.interface.handleKeyLeft()
+        self.interface.showList.assert_called_with(layer=0)
 
-[html]
-# Einstellungen für den HTML-Bericht
-directory = coverage_html_report
+    def test_importFile(self):
+        with patch('builtins.open', unittest.mock.mock_open(read_data="data")) as mock_file:
+            self.interface.importFile()
+            mock_file.assert_called_with("../importExport/topSecret.json", 'rb')
 
-[xml]
-# Einstellungen für den XML-Bericht
-output = coverage.xml
+    def test_exportFile(self):
+        with patch('builtins.open', unittest.mock.mock_open(read_data="data")) as mock_file:
+            self.interface.exportFile()
+            mock_file.assert_called_with("passwords.json", 'rb')
+
+    def test_verifyPassword(self):
+        self.interface.passwordgenerator.passwordSafety = MagicMock(return_value="Strong")
+        self.interface.passwordgenerator.containsEverything = MagicMock(return_value=True)
+        self.interface.createPassword1 = "password123"
+        self.interface.verifyPassword()
+        self.interface.stdscr.addstr.assert_any_call(6, 79, "Strong")
+        self.interface.stdscr.addstr.assert_any_call(7, 81, "True")
+
+    def test_handleTypemode(self):
+        # Implementieren eines Tests für handleTypemode (kann je nach Bedarf erweitert werden)
+        self.interface.layer = 1
+        self.interface.chooseRow = 1
+        self.interface.key = 'a'
+        self.interface.handleTypemode()
+        self.interface.stdscr.addstr.assert_called_with(2, 4, 'a  ')
+
+if __name__ == '__main__':
+    unittest.main()
