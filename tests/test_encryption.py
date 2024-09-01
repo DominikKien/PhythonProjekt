@@ -6,12 +6,12 @@ from encryption import Encryption
 
 class TestEncryption(unittest.TestCase):
     def setUp(self) -> None:
-        self.master_password: str = "testpassword"
-        self.encryption: Encryption = Encryption(self.master_password)
+        self.masterPassword: str = "testpassword"
+        self.encryption: Encryption = Encryption(self.masterPassword)
 
     def test_derive_key(self) -> None:
         salt: bytes = b'fixed_salt_value'
-        key: bytes = self.encryption.derive_key(self.master_password, salt)
+        key: bytes = self.encryption.derive_key(self.masterPassword, salt)
         self.assertEqual(len(key), 32) 
 
     def test_encrypt_decrypt(self) -> None:
