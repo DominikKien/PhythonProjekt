@@ -4,24 +4,25 @@ from datetime import datetime
 from user import User
 
 class PasswordManager:
-    def __init__(self, user: User, storage_file: str = 'passwords.json'):
+    def __init__(self, user: User, storage_file: str = 'passwords.json') -> None:
         self.user = user
         self.encryption = Encryption(user.master_password_hash)
         self.storage = Storage(storage_file)
 
-    def verify(self) -> bool:
-        if len(self.getAllEntryes()) > 0:
-            verify = self.get_entry("verify")
-            if verify:
-                if verify["password"] == "verify":
-                    return True
-                else:
-                    return False
-            else:
-                self.add_entry("verify", "verify", "", "", "")
-                return True
-        else: 
+    def existingAccountValid(self)-> bool:
+        verify = self.get_entry("verify")
+        if verify["password"] == "verify":
+            return True
+        else:
             return False
+    
+    def newAccountValid(self) -> bool: 
+        if len(self.getAllEntryes()) > 0:
+            return False
+        else: 
+            self.add_entry("verify", "verify", "", "", "")
+            return True
+         
         '''
         verify = self.getAllEntryes()
         print(verify)
@@ -43,10 +44,10 @@ class PasswordManager:
             encrypted_notes = self.encryption.encrypt(notes)
             encrypted_category = self.encryption.encrypt(category)
             self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=encrypted_url, notes=encrypted_notes, category=encrypted_category, datetime = encrypted_datetime)
-            self.verify()
+            #self.verify()
             return True
 
-    def get_entry(self, name: str):
+    def get_entry(self, name: str) -> dict:
         entry = self.storage.getEntry(username=self.user.username, name=str(name))
         if entry:
             # Decrypt the password before returning
@@ -58,15 +59,15 @@ class PasswordManager:
             for i in range(len(entry["history"])):
                 entry["history"][i] = self.encryption.decrypt(entry["history"][i]) 
             return entry
-        return None
+        return {}
 
-    def update_entry(self, name: str, new_password: str):
+    def update_entry(self, name: str, new_password: str) -> None:
         encrypted_password = self.encryption.encrypt(new_password)
         self.storage.update_password(username=self.user.username, name=name, new_password=encrypted_password)
 
-    def delete_entry(self, name: str):
+    def delete_entry(self, name: str) -> None:
         self.storage.delete_password(username=self.user.username, name=name)
     
-    def getAllEntryes(self):
+    def getAllEntryes(self) -> list:
         save = self.storage.getAllEntryes(self.user.username)
         return save

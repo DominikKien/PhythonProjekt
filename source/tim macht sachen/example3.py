@@ -11,8 +11,8 @@ m.add_entry(name="github", password="lala!", url="https://github.com", notes="Pe
 
 #print(m.getAllEntryes())
 #print(m.get_entry("github"))
-m.update_entry("github", "hehe")
+#m.update_entry("github", "hehe")
 
 print(m.get_entry("github"))
 
-m.delete_entry("github")
+#m.delete_entry("github")
