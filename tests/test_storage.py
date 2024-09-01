@@ -2,7 +2,9 @@
 import unittest
 import os
 import json
-from storage import Storage  # type: ignore
+import sys
+sys.path.append('../')
+from source.storage import Storage
 
 class TestStorage(unittest.TestCase):
 

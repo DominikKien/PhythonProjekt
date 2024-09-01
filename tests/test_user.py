@@ -1,7 +1,9 @@
 #pylint: disable=C
 import unittest
 from hashlib import sha256
-from user import User  # Anpassen auf den tatsächlichen Pfad
+import sys
+sys.path.append('../')
+from source.user import User
 
 
 class TestUser(unittest.TestCase):

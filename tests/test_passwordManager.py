@@ -1,15 +1,17 @@
 #pylint: disable=C
 import unittest
 from unittest.mock import MagicMock
-from password_manager import PasswordManager  # Anpassen auf den tatsächlichen Pfad
-from storage import Storage
-from encryption import Encryption
-from user import User
+import sys
+sys.path.append('../')
+from source.passwordManager import PasswordManager  # Anpassen auf den tatsächlichen Pfad
+from source.storage import Storage
+from source.encryption import Encryption
+from source.user import User
 
 
 class TestPasswordManager(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_user = User(username="testuser", master_password_hash="hashed_password")
+        self.mock_user = User(username="testuser", masterPassword="hashed_password")
         self.mock_encryption = MagicMock(Encryption)
         self.mock_storage = MagicMock(Storage)
         self.password_manager = PasswordManager(self.mock_user, storageFile='test_passwords.json')
