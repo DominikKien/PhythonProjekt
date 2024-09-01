@@ -7,26 +7,32 @@ master_password = "SuperSecretMaster123!"
 
 # Create a user instance
 user = User(username=username, master_password=master_password)
-print(user.verify_master_password("SuperSecretMaster123!"))
+password_manager = PasswordManager(user=user)
 
 
 
 
 
+
+
+# Step 3: Add two passwords for this user
+password_manager.add_entry(name="github", password="lala!", url="https://github.com", notes="Personal GitHub account")
+password_manager.add_entry(name="gmail", password="lulu!", url="https://mail.google.com", notes="Personal Gmail account")
+
+username2 = "newName2"
+master_password2 = "SuperSecretMaster123!2"
 user2 = User(username=username2, master_password=master_password2)
+password_manager = PasswordManager(user=user2)
+
+
+password_manager.add_entry(name="github", password="GitHubPassword1!", url="https://github.com", notes="Personal GitHub account")
+password_manager.add_entry(name="gmail", password="GmailPassword1!", url="https://mail.google.com", notes="Personal Gmail account")
+
+print("Passwords added successfully!")
+
 '''
 username2 = "newName2"
 master_password2 = "SuperSecretMaster123!2"
-#password_manager2.getAllEntryes()
-# Step 3: Add two passwords for this user
-#password_manager.add_entry(name="github", password="lala!", url="https://github.com", notes="Personal GitHub account")
-#password_manager.add_entry(name="gmail", password="lulu!", url="https://mail.google.com", notes="Personal Gmail account")
-
-#password_manager2.add_entry(name="github", password="GitHubPassword1!", url="https://github.com", notes="Personal GitHub account")
-#password_manager2.add_entry(name="gmail", password="GmailPassword1!", url="https://mail.google.com", notes="Personal Gmail account")
-
-#print("Passwords added successfully!")
-
 
 user3 = User(username=username2, master_password=master_password2)
 password_manager3 = PasswordManager(user=user3)
