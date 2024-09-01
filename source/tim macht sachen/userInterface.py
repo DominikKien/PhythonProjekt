@@ -43,12 +43,13 @@ class Interface:
         loginAccountPage: List[str] = ["Log into your Account", "Type your Username", "", "Type your password", "", "LogIn"]
         currentAccountPage: List[str] = ["", "Create a new Entry"]
         newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "might assign a category",
-                                    "", "Type the password", "", "Might want to add a short Note?", "", "Save"]
-        showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save","created at","" "last edit", ""]
+                                    "", "Type the password", "", "Might want to add a short Note?", "", "Save","Generate password"]
+        showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "", "Save","delete","created at","" "last edit", ""]
         self._allPages: List[List[str]] = [startPage, createAccountPage, loginAccountPage, currentAccountPage, newEntryPage, showPlattformPage]
 
     def showList(self, layer: int) -> int:
         """Gibt die Länge der ausgewählten Liste zurück und zeigt die Ausgewählte Liste im Terminal an"""
+        self.offset = 0
         self.layer = layer
         if self.stdscr is None:
             raise ValueError("_stdscr is not initialized.")
@@ -77,7 +78,7 @@ class Interface:
                 self.stdscr.addstr(0, 50, "Please extend your terminal in height")
                 return i
             self.stdscr.addstr(i, 40, value)
-        return 12 # Save Button
+        return 13 # Save Button
                     
     def extractData(self, data: Dict[str, str]) -> List:
         """Fügt die Daten in der richtigen Liste hinzu"""
@@ -93,7 +94,7 @@ class Interface:
         self.createPassword1 = data["password"]
         dataList[10] = data["notes"]
         self.note = data["notes"]
-        dataList[13] = data["created_at"]
+        dataList[14] = data["created_at"]
         dataList.extend(data["history"])
         return dataList
 
@@ -184,6 +185,23 @@ class Interface:
             self.layer = 4
             self.createPassword1 =""
             self.lengthOfPage = self.showEntry(create=True, height=self.height)
+        elif self.layer == 4  and self.chooseRow == 11:#Save new Entry
+            if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
+                self.manager.add_entry(name = self.entryName, password=self.createPassword1, url= self.url, notes = self.note, category=self.category)
+                self.lengthOfPage = self.showList(3)
+            else:
+                self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
+        elif self.layer == 5 and self.chooseRow == 11:#Save changend Entry
+            if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
+                self.manager = PasswordManager(user = self.currentUser)
+                self.manager.update_entry(name = self.entryName, new_password=self.createPassword1)
+                self.lengthOfPage = self.showList(3)
+            else:
+                self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
+        elif (self.layer == 4 or self.layer == 5) and self.chooseRow == 12:#Delete
+            self.manager.delete_entry(self.entryName)
+            self.lengthOfPage = self.showList(3)
+
         
             
         return False
