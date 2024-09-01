@@ -143,8 +143,7 @@ class Interface:
                 self.stdscr.keypad(False)
                 self.typeMode = True
                 return True
-            if self.layer == 2 and self.chooseRow == 5:  # Account öffnen
-                self.stdscr.addstr(1, 30, "Account öffnen")
+            if self.layer == 2 and self.chooseRow == 5:  # Account öffnen Login
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
                 if self.manager.verify():
                     self._allPages[3][0] = self.userName
