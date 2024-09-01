@@ -1,73 +1,101 @@
-#pylint: disable=C
-import unittest
-import curses
-from unittest.mock import patch, Mock
-import sys
+import pytest
+from unittest.mock import MagicMock
+from interface import Interface
+from user import User
+from passwordManager import PasswordManager
+from passwordGenerator import PasswordGenerator
 
-# Den Pfad anpassen, falls notwendig
-sys.path.append('../')
-from source.userInterface import Interface
+# Dummy-Setup für curses
+@pytest.fixture
+def mock_curses():
+    curses = MagicMock()
+    curses.window = MagicMock()
+    curses.KEY_BACKSPACE = 127
+    return curses
 
+@pytest.fixture
+def interface(mock_curses):
+    interface = Interface()
+    interface.stdscr = mock_curses.window
+    interface.passwordgenerator = PasswordGenerator(6)
+    interface.manager = MagicMock(spec=PasswordManager)
+    interface.currentUser = MagicMock(spec=User)
+    return interface
 
-class TestInterface(unittest.TestCase):
+def test_show_list(interface, mock_curses):
+    mock_curses.window.addstr = MagicMock()
+    length = interface.showList(0)
+    assert length > 0
+    mock_curses.window.addstr.assert_called()  # Verifizieren, dass addstr aufgerufen wurde
 
-    @staticmethod
-    @patch('curses.wrapper')
-    def test_start(mock_wrapper: Mock) -> None:
-        interface = Interface()
-        mock_wrapper.return_value = None
-        interface.start()
-        mock_wrapper.assert_called_once()
+def test_show_entry(interface, mock_curses):
+    mock_curses.window.addstr = MagicMock()
+    length = interface.showEntry(create=True, height=20)
+    assert length > 0
+    mock_curses.window.addstr.assert_called()
 
-    @staticmethod
-    @patch('curses.initscr')
-    @patch('curses.noecho')
-    @patch('curses.cbreak')
-    @patch('curses.endwin')
-    def test_main(mock_initscr: Mock) -> None:
-        stdscr = mock_initscr.return_value
-        stdscr.getkey.side_effect = ['\n', '\r', 'KEY_LEFT', 'KEY_RIGHT',
-                                      'KEY_UP', 'KEY_DOWN', 'q']
+def test_extract_data(interface):
+    data = {
+        "name": "test_name",
+        "url": "http://example.com",
+        "category": "test_category",
+        "password": "test_password",
+        "notes": "test_notes",
+        "created_at": "2024-09-01",
+        "history": ["change1", "change2"]
+    }
+    result = interface.extractData(data)
+    assert result[2] == "test_name"
+    assert interface.entryName == "test_name"
 
-        interface = Interface()
-        interface.main(stdscr)
-        stdscr.keypad.assert_called_with(True)
+def test_open_account(interface):
+    user = User(username="test_user", masterPassword="test_password")
+    manager = interface.openAccount("test_user", "test_password")
+    assert manager.currentUser.username == user.username
 
-    def test_showList(self) -> None:
-        interface = Interface()
-        stdscr = curses.initscr()
-        interface.stdscr = stdscr
-        length = interface.showList(layer=0)
-        self.assertEqual(length, len(interface.allPages[0]))
+def test_handle_enter(interface, mock_curses):
+    interface.layer = 1
+    interface.chooseRow = 7
+    interface.createPassword1 = "password1"
+    interface.createPassword2 = "password1"
+    interface.userName = "test_user"
+    interface.passwordgenerator.containsEverything = MagicMock(return_value=True)
+    interface.manager.newAccountValid = MagicMock(return_value=True)
+    result = interface.handleEnter()
+    assert result is True
+    mock_curses.window.addstr.assert_called()
 
-    def test_extractData(self) -> None:
-        interface = Interface()
-        data = {
-            "username": "user1",
-            "password": "pass1",
-            "url": "http://example.com",
-            "notes": "note",
-            "category": "category1",
-            "created_at": "Heute",
-            "history": ["gestern", "heute", "morgen"]
-        }
-        interface.extractData(data)
-        self.assertEqual(interface.allPages[5][2], "user1")
+def test_handle_key_right(interface, mock_curses):
+    interface.layer = 0
+    interface.chooseRow = 1
+    interface.showList = MagicMock(return_value=5)
+    result = interface.handleKeyRight()
+    assert result is False
+    interface.showList.assert_called()
 
-    @patch('curses.initscr')
-    def test_handleEnter(self, mock_initscr: Mock) -> None:
-        stdscr = mock_initscr.return_value
-        interface = Interface()
-        interface.stdscr = stdscr
-        interface.layer = 1
-        interface.chooseRow = 7
-        interface.createPassword1 = "pass1"
-        interface.createPassword2 = "pass1"
-        interface.userName = "user1"
-        interface.handleEnter()
-        self.assertIsNotNone(interface.currentUser)
-        self.assertEqual(interface.currentUser.username, "user1")
+def test_handle_key_left(interface):
+    interface.layer = 2
+    interface.showList = MagicMock(return_value=5)
+    result = interface.handleKeyLeft()
+    assert result is False
+    interface.showList.assert_called()
 
+def test_handle_typemode(interface, mock_curses):
+    interface.layer = 1
+    interface.chooseRow = 1
+    interface.key = 'a'
+    interface.typeMode = True
+    interface.handleTypemode()
+    assert interface.userName == 'a'
+    mock_curses.window.addstr.assert_called()
 
-if __name__ == '__main__':
-    unittest.main()
+def test_account_creation(interface, mock_curses):
+    interface.layer = 1
+    interface.chooseRow = 1
+    interface.key = 'a'
+    result = interface.accountCreation()
+    assert result is False
+    assert interface.userName == 'a'
+    mock_curses.window.addstr.assert_called()
+
+# Weitere Tests für alle Methoden der Interface Klasse

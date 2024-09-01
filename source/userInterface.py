@@ -131,7 +131,6 @@ class Interface:
     def handleEnter(self) ->bool:
         """Kümmert sich um die Eingabe der Enter Taste
         return Wert kann bei False andere Handle Taste aufrufen, Multikeyput"""
-        self.stdscr.addstr(0, 30, str(self.chooseRow))
         if 5 >= self.layer >= 1 and not self.typeMode:  # Enter ohne Schreibmodus aktiviert
             if self.layer == 1 and self.chooseRow < 7:  # Account Erstelleingabe
                 self.stdscr.keypad(False)
@@ -154,7 +153,6 @@ class Interface:
                 if not self.manager.newAccountValid():
                     self.stdscr.addstr(1, 30, "Account existiert schon")
                     return True
-                self.stdscr.addstr(1, 30, "Account erstellt")
                 self.allPages[3][0] = self.userName
                 self.lengthOfPage = self.showList(3)
                 return True
@@ -246,9 +244,9 @@ class Interface:
             elif self.chooseRow == 3:  # Schließen Speichern der Daten Hier
                 return True
             elif self.chooseRow == 4:#Datei exportieren
-                print("hier Export")
+                self.exportFile()
             elif self.chooseRow == 5:#Datei importieren
-                print("hier Import")
+                self.importFile()
         elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >6: #Einträge anzeigen
             self.entryNumber = self.chooseRow
             self.offset = 36
@@ -292,7 +290,6 @@ class Interface:
         return False
     def handleKeyLeft(self)->bool:
         """Kümmer sich um Pfeiltaste Links Eingabe"""
-        self.stdscr.addstr(0, 30, str(self.layer))
         if 3 > self.layer > 0:
             self.userName = ""
             self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
@@ -424,6 +421,24 @@ class Interface:
             self.stdscr.addstr(6, 4, self.createPassword2 + "  ")
         return checkPassword
 
+    def importFile(self) ->None:
+        """Import a File"""
+        try:
+            #os.remove("passwords.json")
+            with open("../importExport/topSecret.json", 'rb') as src:
+                with open("passwords.json", 'wb') as dest:
+                    dest.write(src.read())
+        except OSError as e:
+            print(f"Error renaming file: {e}")
+    def exportFile(self) ->None:
+        """Export a File"""
+        try:
+            with open("passwords.json", 'rb') as src:
+                with open("../importExport/topSecret.json", 'wb') as dest:
+                    dest.write(src.read())
+
+        except OSError as e:
+            print(f"Error renaming file: {e}")
 
     def start(self) -> None:
         """Startet das GUI"""
@@ -477,14 +492,11 @@ class Interface:
 
             self.stdscr.addstr(self._lastChooseRow, self.offset, "    ")
             self.stdscr.addstr(self.chooseRow, self.offset, "--->")
-            self.stdscr.addstr(0, 20, str(self.layer))
-           #self.stdscr.addstr(5, 0, str(self.layer))
             curses.curs_set(0)
             self._lastChooseRow = self.chooseRow
             self.stdscr.refresh()
 
         curses.nocbreak()
-        #stdscr.keypad(False)
         curses.echo()
 
 
