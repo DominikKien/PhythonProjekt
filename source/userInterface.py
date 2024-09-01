@@ -176,7 +176,8 @@ class Interface:
                     self.allPages[3][0] = self.userName
                     self.usedAccountPage = self.allPages[3].copy()
                     self.usedAccountPage.extend(self.manager.getAllEntryes())
-                    self.lengthOfPage = self.showList(3)
+                    self.usedAccountPage.remove("verify")
+                    self.lengthOfPage = self.showList(99)
                 else:
                     self.stdscr.addstr(1, 30, "Wrong Account Name or Password")
                 return True
@@ -187,7 +188,8 @@ class Interface:
             if self.layer == 3 and self.chooseRow == 6:
                 self.usedAccountPage = self.allPages[3].copy()
                 self.usedAccountPage.extend(self.manager.getAllEntryes())
-                self.lengthOfPage = self.showList(3)
+                self.usedAccountPage.remove("verify")
+                self.lengthOfPage = self.showList(99)
             if self.layer in (4,5) and 1 <= self.chooseRow <= 10:  # Einloggen Eingabe
                 self.stdscr.keypad(False)
                 self.typeMode = True
@@ -215,12 +217,12 @@ class Interface:
                 self.usedAccountPage = self.allPages[3].copy()
                 self.usedAccountPage.extend(self.manager.getAllEntriesByUrl(self.searchUrl))
                 self.searchUrl =""
-                self.lengthOfPage = self.showList(3)
+                self.lengthOfPage = self.showList(99)
             if self.layer == 3 and self.chooseRow in (4,5):#Suche für Namen ausführen
                 self.usedAccountPage = self.allPages[3].copy()
                 self.usedAccountPage.extend(self.manager.getAllEntriesByName(self.searchName))
                 self.searchName =""
-                self.lengthOfPage = self.showList(3)
+                self.lengthOfPage = self.showList(99)
             if self.layer in (4,5):
                 self.entryGenerator = PasswordGenerator(length=int(self.length), useCapitals= self.useCapitals, useNumbers=self.useNumber,
                                                         useSpecialCharacters=self.useSpechialCharacters)
@@ -347,7 +349,7 @@ class Interface:
                     self.searchName = self.searchName[:-1]
                 else:
                     self.searchName += self.key
-                self.stdscr.addstr(3, 4, self.searchName + "  ")
+                self.stdscr.addstr(5, 4, self.searchName + "  ")
         elif self.layer in(4,5):
             if self.chooseRow in (1, 2):
                 if self.key in( '\b','\x7f',curses.KEY_BACKSPACE):
@@ -460,9 +462,9 @@ class Interface:
                     self.lengthOfPage = self.showList(self.layer)
                 elif self.layer == 5:
                     self.dataList = self.extractData(self.manager.getEntry(self.allPages[3][self.entryNumber]))
-                    self.showEntry(create=False, height = self.height)
+                    self.lengthOfPage = self.showEntry(create=False, height = self.height)
                 elif self.layer == 4:
-                    self.showEntry(create=True, height = self.height)
+                    self.lengthOfPage = self.showEntry(create=True, height = self.height)
             oldheight = self.height
             if self.chooseRow is None:
                 self.chooseRow = 1
