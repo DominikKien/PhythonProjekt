@@ -63,18 +63,21 @@ class PasswordManager:
         save = self.storage.getAllEntryes(self.user.username)
         return save
 
-    def getAllEntriesByUrl(self) -> list:
+    def getAllEntriesByUrl(self, url) -> list:
         entryes = self.getAllEntryes()
         entryes = entryes.remove("verify")
-        url = {}
+        urls = []
         for i in entryes:
-            url[self.getEntry(i)["url"]] = i
+            if str(url) in str(entryes[self.getEntry(i)["url"]]):
+                url.append(i)
+        return urls
 
-        sortedUrl = dict(sorted(url.items()))
-        return list(sortedUrl.keys())
-
-    def getAllEntriesByName(self) -> list:
+    def getAllEntriesByName(self,name) -> list:
         entryes = self.getAllEntryes()
         entryes = entryes.remove("verify")
-        return entryes.sort()
+        names = []
+        for i in entryes:
+            if str(name) in str(i):
+                names.append(i)
+        return names
         
