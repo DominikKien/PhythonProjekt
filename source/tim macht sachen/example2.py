@@ -7,8 +7,7 @@ master_password2 = "SuperSecretMaster123!2"
 user3 = User(username=username2, master_password=master_password2)
 password_manager3 = PasswordManager(user=user3)
 
-test = password_manager3.getAllEntryes()
-
+print(password_manager3.add_entry(name="github", password="lala!", url="https://github.com", notes="Personal GitHub account"))
 #for i in test:
 #    entry = password_manager3.get_entry(i)
 #    print(entry)

@@ -33,17 +33,30 @@ class PasswordManager:
 '''
 
     
-    def add_entry(self, name: str, password: str, url: str, notes: str = "", category: str = ""):
-        encrypted_password = self.encryption.encrypt(password)
-        encrypted_datetime = self.encryption.encrypt(datetime.now().isoformat())
-        self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category, datetime = encrypted_datetime)
+    def add_entry(self, name: str, password: str, url: str, notes: str = "", category: str = "") -> bool:
+        if (name in self.getAllEntryes()):
+            return False
+        else:
+            encrypted_password = self.encryption.encrypt(password)
+            encrypted_datetime = self.encryption.encrypt(datetime.now().isoformat())
+            encrypted_url = self.encryption.encrypt(url)
+            encrypted_notes = self.encryption.encrypt(notes)
+            encrypted_category = self.encryption.encrypt(category)
+            self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=encrypted_url, notes=encrypted_notes, category=encrypted_category, datetime = encrypted_datetime)
+            self.verify()
+            return True
 
     def get_entry(self, name: str):
         entry = self.storage.getEntry(username=self.user.username, name=str(name))
         if entry:
             # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
-            #entry['created_at'] = self.encryption.decrypt(entry['created_at'])
+            entry['created_at'] = self.encryption.decrypt(entry['created_at'])
+            entry['url'] = self.encryption.decrypt(entry['url'])
+            entry['notes'] = self.encryption.decrypt(entry['notes'])
+            entry['category'] = self.encryption.decrypt(entry['category'])
+            for i in range(len(entry["history"])):
+                entry["history"][i] = self.encryption.decrypt(entry["history"][i]) 
             return entry
         return None
 
