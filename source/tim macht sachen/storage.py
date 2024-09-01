@@ -1,23 +1,27 @@
+''' This is for storage managment'''
+
 import json
 
-
 class Storage:
+    '''reads from File and writes in File'''
     def __init__(self, filepath: str) -> None:
         self.filepath = filepath
-        self.load_data()
+        self.loadData()
 
-    def load_data(self) -> None:
+    def loadData(self) -> None:
+        '''loads the Current json file'''
         try:
-            with open(self.filepath, 'r') as file:
+            with open(self.filepath, 'r', encoding="utf-8") as file:
                 self.data = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             self.data = {}
 
-    def save_data(self) -> None:
-        with open(self.filepath, 'w') as file:
+    def saveData(self) -> None:
+        with open(self.filepath, 'w', encoding="utf-8") as file:
             json.dump(self.data, file, indent=4)
 
-    def add_password(self, username: str, name: str, password: str, url: str, notes: str, category: str, datetime: str) -> None:
+    def addPassword(self, username: str, name: str, password: str, url: str, notes: str, category: str, datetime: str) -> None:
+        ''' adds the given data to json'''
         entry = {
             "name": name,
             "password": password,
@@ -30,12 +34,13 @@ class Storage:
         if username not in self.data:
             self.data[username] = []
         self.data[username].append(entry)
-        self.save_data()
+        self.saveData()
 
     def getEntry(self, username: str, name: str) -> dict:
-        user_entries = self.data.get(username, [])
+        ''' gets one entry by the parameter name of the password'''
+        userEntries = self.data.get(username, [])
         entry = {}
-        for entrys in user_entries:
+        for entrys in userEntries:
             if entrys["name"] == name:
                 entry["name"] = entrys["name"]
                 entry["password"] = entrys["password"]
@@ -46,24 +51,26 @@ class Storage:
                 entry["history"] = entrys["history"]
                 return entry
         return entry
-    
+
     def getAllEntryes(self, username:str) -> list:
+        '''gives back all Entryes of selected user'''
         save = []
-        user_entries = self.data.get(username, [])
-        for entry in user_entries:
+        userEntries = self.data.get(username, [])
+        for entry in userEntries:
             save.append(entry["name"])
         return save
 
-    def update_password(self, username: str, name: str, new_password: str) -> None:
-        user_entries = self.data.get(username, [])
-        for entry in user_entries:
+    def updatePassword(self, username: str, name: str, newPassword: str) -> None:
+        '''saves the updated password in the file'''
+        userEntries = self.data.get(username, [])
+        for entry in userEntries:
             if entry["name"] == name:
                 entry['history'].append(entry['password'])
-                entry['password'] = new_password
-                self.save_data()
+                entry['password'] = newPassword
+                self.saveData()
                 return
 
-    def delete_password(self, username: str, name: str) -> None:
-        user_entries = self.data.get(username, [])
-        self.data[username] = [entry for entry in user_entries if entry["name"] != name]
-        self.save_data()
+    def deletePassword(self, username: str, name: str) -> None:
+        userEntries = self.data.get(username, [])
+        self.data[username] = [entry for entry in userEntries if entry["name"] != name]
+        self.saveData()

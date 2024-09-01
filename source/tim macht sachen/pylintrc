@@ -10,6 +10,7 @@ variable-naming-style=camelCase
 
 [DESIGN]
 max-attributes=30
+max-args=10
 max-branches=30
 max-returns=15
 max-statements=60 
