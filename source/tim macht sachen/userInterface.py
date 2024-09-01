@@ -2,7 +2,7 @@
 import curses
 from typing import List, Dict
 from user import User
-from password_manager import PasswordManager
+from passwordManager import PasswordManager
 from passwordGenerator import PasswordGenerator
 
 
@@ -37,12 +37,12 @@ class Interface:
         self.note:str = ""
 
         self.dataList: List[str]
-
-        startPage: List[str] = ["Welcome to Password Manager", "Choose an Account", "Create an Account",  "Close this application"]
+        self.usedAccountPage: List[str]
+        startPage: List[str] = ["Welcome to Password Manager", "Choose an Account", "Create an Account",  "Close this application","export","import"]
         createAccountPage: List[str] = ["Create your Account", "Type your Username", "", "Type your password", "",
                                          "Type your Password again", "", "Create Account", "Generate password"]
         loginAccountPage: List[str] = ["Log into your Account", "Type your Username", "", "Type your password", "", "LogIn"]
-        currentAccountPage: List[str] = ["", "Create a new Entry"]
+        currentAccountPage: List[str] = ["", "Create a new Entry","Search for URL","","Search for Name","","reset searches"]
         newEntryPage: List[str] = ["New Entry", "Type your Name for the plattform", "", "Type the url", "", "might assign a category",
                                     "", "Type the password", "", "Might want to add a short Note?", "", "Save","Generate password"]
         showPlattformPage: List[str] = ["Entry", "Name of the plattform", "", "url:", "", "category", "", "password", "", "note", "",
@@ -52,11 +52,16 @@ class Interface:
     def showList(self, layer: int) -> int:
         """Gibt die Länge der ausgewählten Liste zurück und zeigt die Ausgewählte Liste im Terminal an"""
         self.offset = 0
-        self.layer = layer
+        
         if self.stdscr is None:
             raise ValueError("_stdscr is not initialized.")
         self.stdscr.clear()
-        currentPage = self._allPages[layer]
+        if layer == 99:
+            currentPage = self.usedAccountPage
+            self.layer = 3
+        else:
+            currentPage = self._allPages[layer]
+            self.layer = layer
         self.stdscr.addstr(0, 0, currentPage[0])
         for i in range(1, len(currentPage)):
             if i == self.height:
@@ -66,6 +71,15 @@ class Interface:
         self.stdscr.refresh()
         self._lastChooseRow = 1
         curses.curs_set(0)
+        self.userName:str = "" #Reset der Letzten Eingabe von anderen Aufrufen
+        self.createPassword1:str = ""
+        self.createPassword2:str = ""
+        self.masterpassword:str = ""
+
+        self.entryName:str = ""
+        self.url:str = ""
+        self.category:str = ""
+        self.note:str = ""
         return i + 1
 
     def showEntry(self, create:bool,height: int) -> int:
@@ -151,11 +165,18 @@ class Interface:
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
                 if self.manager.existingAccountValid():
                     self._allPages[3][0] = self.userName
-                    self._allPages[3].extend(self.manager.getAllEntryes())
+                    self.usedAccountPage = self._allPages[3].copy()
+                    self.usedAccountPage.extend(self.manager.getAllEntryes())
                     self.lengthOfPage = self.showList(3)
                 else:
                     self.stdscr.addstr(1, 30, "Wrong Account Name or Password")
                 return True
+            if self.layer == 3 and self.chooseRow in (2,3,4,5): #Suchmenü betreten
+                self.stdscr.keypad(False)
+                self.typeMode = True
+                return True
+            if self.layer == 3 and self.chooseRow == 6:
+                print("reset Search Stuff")
             if self.layer in(4,5) and 1 <= self.chooseRow <= 10:  # Einloggen Eingabe
                 self.stdscr.keypad(False)
                 self.typeMode = True
@@ -163,6 +184,8 @@ class Interface:
         if 5 >= self.layer >= 1 and self.typeMode:  # Eingabemodus verlassen
             self.stdscr.keypad(True)
             self.typeMode = False
+            if self.layer == 3 and self.chooseRow in (2,3,4,5): #Suche ausführen
+                print("hier wird die Suche dann ausgeführt")
             return True
         return False
 
@@ -176,12 +199,16 @@ class Interface:
                 self.lengthOfPage = self.showList(layer=1)
             elif self.chooseRow == 3:  # Schließen Speichern der Daten Hier
                 return True
-        elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >1: #Einträge anzeigen
+            elif self.chooseRow == 4:#Datei exportieren
+                print("hier Export")
+            elif self.chooseRow == 5:#Datei importieren
+                print("hier Import")
+        elif self.layer == 3 and self.lengthOfPage>= self.chooseRow >6: #Einträge anzeigen
             self.entryNumber = self.chooseRow
             self.offset = 36
             self.layer = 5
             self.createPassword1 =""
-            self.dataList =self.extractData(self.manager.get_entry(self._allPages[3][self.chooseRow]))
+            self.dataList =self.extractData(self.manager.getEntry(self.usedAccountPage[self.chooseRow]))
             self.lengthOfPage = self.showEntry(create=False, height= self.height) #Plattform anzeigen
         elif self.layer == 3 and self.chooseRow == 1:#Eintrag erstellen
             self.offset = 36
@@ -190,26 +217,32 @@ class Interface:
             self.lengthOfPage = self.showEntry(create=True, height=self.height)
         elif self.layer == 4  and self.chooseRow == 11:#Save new Entry
             if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
-                self.manager.add_entry(name = self.entryName, password=self.createPassword1, url= self.url, notes = self.note, category=self.category)
-                self._allPages[3].extend(self.manager.getAllEntryes())
-                self.lengthOfPage = self.showList(3)
+                self.manager.addEntry(name = self.entryName, password=self.createPassword1, url= self.url, notes = self.note, category=self.category)
+                self.usedAccountPage = self._allPages[3].copy()
+                self.usedAccountPage.extend(self.manager.getAllEntryes())
+                self.usedAccountPage.remove("verify")
+                self.lengthOfPage = self.showList(99)
             else:
                 self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
         elif self.layer == 5 and self.chooseRow == 11:#Save changend Entry
             if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
                 self.manager = PasswordManager(user = self.currentUser)
-                self.manager.update_entry(name = self.entryName, new_password=self.createPassword1)
-                self._allPages[3].extend(self.manager.getAllEntryes())
-                self.lengthOfPage = self.showList(3)
+                self.manager.updateEntry(name = self.entryName, new_password=self.createPassword1)
+                self.usedAccountPage = self._allPages[3].copy()
+                self.usedAccountPage.extend(self.manager.getAllEntryes())
+                self.usedAccountPage.remove("verify")
+                self.lengthOfPage = self.showList(99)
             else:
                 self.stdscr.addstr(0, 30, "No name or password does not follow criterias")
         elif  self.layer == 5 and self.chooseRow == 12:#Delete
-            self.manager.delete_entry(self.entryName)
-            self._allPages[3].remove(self.entryName)
-            self.lengthOfPage = self.showList(3)
+            self.manager.deleteEntry(self.entryName)
+            self.usedAccountPage = self._allPages[3].copy()
+            self.usedAccountPage.extend(self.manager.getAllEntryes())
+            self.usedAccountPage.remove("verify")
+            self.lengthOfPage = self.showList(99)
         elif self.layer == 4 and self.chooseRow == 12:
             self.createPassword1 = self.passwordgenerator.generate()
-            self.stdscr.addstr(8, 40, self.createPassword1 + "  ")
+            self.stdscr.addstr(8, 40, self.createPassword1 + "  ")           
         return False
     def handleKeyLeft(self)->bool:
         """Kümmer sich um Pfeiltaste Links Eingabe"""
@@ -217,7 +250,7 @@ class Interface:
             self.userName = ""
             self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
         elif self.layer == 3:
-            self.lengthOfPage = self.showList(layer=1)  # Eine Seite zurück
+            self.lengthOfPage = self.showList(layer=0)  # Eine Seite zurück
             # Hier auch noch Account schließen
         elif 5 <= self.layer >= 4:
             self.lengthOfPage = self.showList(layer=3)  # Eine Seite zurück
@@ -336,7 +369,7 @@ class Interface:
                 if self.layer < 4:
                     self.lengthOfPage = self.showList(self.layer)
                 elif self.layer == 5:
-                    self.dataList = self.extractData(self.manager.get_entry(self._allPages[3][self.entryNumber]))
+                    self.dataList = self.extractData(self.manager.getEntry(self._allPages[3][self.entryNumber]))
                     self.showEntry(create=False, height = self.height)
                 elif self.layer == 4:
                     self.showEntry(create=True, height = self.height)
