@@ -1,9 +1,9 @@
 """Modul für Ein- und Ausgabe über Terminal"""
 import curses
 from typing import List, Dict
-from user import User
-from passwordManager import PasswordManager
-from passwordGenerator import PasswordGenerator
+from source.user import User
+from source.passwordManager import PasswordManager
+from source.passwordGenerator import PasswordGenerator
 
 
 class Interface:
@@ -501,11 +501,3 @@ class Interface:
         curses.nocbreak()
         curses.echo()
 
-
-
-def main() -> None:
-    interface = Interface()
-    interface.start()
-
-
-main()

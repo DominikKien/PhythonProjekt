@@ -1,9 +1,9 @@
 '''Controlls everything with Accountmanagment'''
 
 from datetime import datetime
-from encryption import Encryption
-from storage import Storage
-from user import User
+from source.encryption import Encryption
+from source.storage import Storage
+from source.user import User
 
 class PasswordManager:
     '''Controller of the Account Managment'''
