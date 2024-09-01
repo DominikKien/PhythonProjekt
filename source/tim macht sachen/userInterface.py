@@ -112,7 +112,7 @@ class Interface:
         return dataList
 
     def openAccount(self, username: str, password: str) -> PasswordManager:
-        currentUser = User(username=username, master_password=password)
+        currentUser = User(username=username, masterpassword=password)
         passwordManager = PasswordManager(currentUser)
         return passwordManager
 
@@ -138,7 +138,7 @@ class Interface:
                     self.stdscr.addstr(1, 30, "Criteria not completed")
                     return True
                 
-                self.currentUser = User(username=self.userName, master_password=self.createPassword1)  # Account erstellt
+                self.currentUser = User(username=self.userName, masterpassword=self.createPassword1)  # Account erstellt
                 self.manager = PasswordManager(user=self.currentUser)
                 if(not self.manager.newAccountValid()):
                     self.stdscr.addstr(1, 30, "Account existiert schon")
