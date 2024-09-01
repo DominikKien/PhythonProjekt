@@ -14,3 +14,5 @@ m.add_entry(name="github", password="lala!", url="https://github.com", notes="Pe
 m.update_entry("github", "hehe")
 
 print(m.get_entry("github"))
+
+m.delete_entry("github")
