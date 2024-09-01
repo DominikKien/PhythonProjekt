@@ -33,6 +33,7 @@ password_manager3 = PasswordManager(user=user3)
 
 print("HIER")
 test = password_manager3.getAllEntryes()
+test.remove("verify")
 print(test)
 for i in test:
     entry = password_manager3.get_entry(i)

@@ -1,5 +1,6 @@
 from encryption import Encryption
 from storage import Storage
+from datetime import datetime
 from user import User
 
 class PasswordManager:
@@ -34,13 +35,15 @@ class PasswordManager:
     
     def add_entry(self, name: str, password: str, url: str, notes: str = "", category: str = ""):
         encrypted_password = self.encryption.encrypt(password)
-        self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category)
+        encrypted_datetime = self.encryption.encrypt(datetime.now().isoformat())
+        self.storage.add_password(username=self.user.username, name=name, password=encrypted_password, url=url, notes=notes, category=category, datetime = encrypted_datetime)
 
     def get_entry(self, name: str):
         entry = self.storage.getEntry(username=self.user.username, name=str(name))
         if entry:
             # Decrypt the password before returning
             entry['password'] = self.encryption.decrypt(entry['password'])
+            #entry['created_at'] = self.encryption.decrypt(entry['created_at'])
             return entry
         return None
 
