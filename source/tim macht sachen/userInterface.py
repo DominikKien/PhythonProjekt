@@ -123,9 +123,13 @@ class Interface:
                 if not self.passwordgenerator.containsEverything(self.createPassword1):
                     self.stdscr.addstr(1, 30, "Criteria not completed")
                     return True
-                self.stdscr.addstr(1, 30, "Account erstellt")
+                
                 self.currentUser = User(username=self.userName, master_password=self.createPassword1)  # Account erstellt
                 self.manager = PasswordManager(user=self.currentUser)
+                if(not self.manager.newAccountValid()):
+                    self.stdscr.addstr(1, 30, "Account existiert schon")
+                    return True
+                self.stdscr.addstr(1, 30, "Account erstellt")
                 self._allPages[3][0] = self.userName
                 self.lengthOfPage = self.showList(3)
                 return True
@@ -145,7 +149,7 @@ class Interface:
                 return True
             if self.layer == 2 and self.chooseRow == 5:  # Account öffnen Login
                 self.manager = self.openAccount(username=self.userName, password=self.masterpassword)
-                if self.manager.verify():
+                if self.manager.existingAccountValid():
                     self._allPages[3][0] = self.userName
                     self._allPages[3].extend(self.manager.getAllEntryes())
                     self.lengthOfPage = self.showList(3)
@@ -186,7 +190,6 @@ class Interface:
             self.lengthOfPage = self.showEntry(create=True, height=self.height)
         elif self.layer == 4  and self.chooseRow == 11:#Save new Entry
             if(self.entryName != "" and self.passwordgenerator.containsEverything(self.createPassword1)):
-                #self.manager.add_entry(name="github", password="lala!", url="https://github.com/", notes="Personal GitHub account")
                 self.manager.add_entry(name = self.entryName, password=self.createPassword1, url= self.url, notes = self.note, category=self.category)
                 self._allPages[3].extend(self.manager.getAllEntryes())
                 self.lengthOfPage = self.showList(3)
