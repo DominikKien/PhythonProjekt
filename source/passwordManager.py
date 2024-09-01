@@ -15,7 +15,7 @@ class PasswordManager:
     def existingAccountValid(self)-> bool:
         '''checks if existing account is valid'''
         verify = self.getEntry("verify")
-        return verify["password"] == "verify"
+        return str(verify["password"]) == "verify"
 
     def newAccountValid(self) -> bool:
         '''checks if new Account is Valid and creates the verification system'''
@@ -63,22 +63,22 @@ class PasswordManager:
         save = self.storage.getAllEntryes(self.user.username)
         return save
 
-    def getAllEntriesByUrl(self, url) -> list:
+    def getAllEntriesByUrl(self, url: str) -> list:
         '''earches for all Passwords which contain this url'''
         entryes = self.getAllEntryes()
         entryes.remove("verify")
         urls = []
         for i in entryes:
             if str(url) in str(entryes[self.getEntry(i)["url"]]):
-                url.append(i)
+                urls.append(i)
         return urls
 
-    def getAllEntriesByName(self,name) -> list:
+    def getAllEntriesByName(self,name: str) -> list:
         '''searches for all Passwords which contain this name'''
         entryes = self.getAllEntryes()
         entryes.remove("verify")
         names = []
         for i in entryes:
             if str(name) in str(i):
-                names.append(i)
+                names.append(str(i))
         return names
