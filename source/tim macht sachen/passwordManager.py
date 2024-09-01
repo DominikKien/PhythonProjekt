@@ -66,12 +66,15 @@ class PasswordManager:
     def getAllEntriesByUrl(self) -> list:
         entryes = self.getAllEntryes()
         entryes = entryes.remove("verify")
+        url = {}
+        for i in entryes:
+            url[self.getEntry(i)["url"]] = i
 
+        sortedUrl = dict(sorted(url.items()))
+        return list(sortedUrl.keys())
 
     def getAllEntriesByName(self) -> list:
         entryes = self.getAllEntryes()
         entryes = entryes.remove("verify")
-
-        for i in entryes:
-            entry = self.getEntry(i)
-            entry = entry["name"]
+        return entryes.sort()
+        
