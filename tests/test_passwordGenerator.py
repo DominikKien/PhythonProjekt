@@ -2,8 +2,8 @@
 import unittest
 import string
 import sys
-sys.path.append('../')
-from source.passwordGenerator import PasswordGenerator
+sys.path.append('../source')
+from passwordGenerator import PasswordGenerator
 
 class TestPasswordGenerator(unittest.TestCase):
     def setUp(self) -> None:
