@@ -64,7 +64,7 @@ class Interface:
     def showList(self, layer: int) -> int:
         """Gibt die Länge der ausgewählten Liste zurück und zeigt die Ausgewählte Liste im Terminal an"""
         self.offset = 0
-        
+
         if self.stdscr is None:
             raise ValueError("_stdscr is not initialized.")
         self.stdscr.clear()
@@ -83,15 +83,15 @@ class Interface:
         self.stdscr.refresh()
         self._lastChooseRow = 1
         curses.curs_set(0)
-        self.userName:str = "" #Reset der Letzten Eingabe von anderen Aufrufen
-        self.createPassword1:str = ""
-        self.createPassword2:str = ""
-        self.masterpassword:str = ""
+        self.userName = "" #Reset der Letzten Eingabe von anderen Aufrufen
+        self.createPassword1 = ""
+        self.createPassword2 = ""
+        self.masterpassword = ""
 
-        self.entryName:str = ""
-        self.url:str = ""
-        self.category:str = ""
-        self.note:str = ""
+        self.entryName = ""
+        self.url = ""
+        self.category = ""
+        self.note = ""
         return i + 1
 
     def showEntry(self, create:bool,height: int) -> int:
@@ -151,7 +151,7 @@ class Interface:
                     return True
                 self.currentUser = User(username=self.userName, masterPassword=self.createPassword1)  # Account erstellt
                 self.manager = PasswordManager(user=self.currentUser)
-                if(not self.manager.newAccountValid()):
+                if not self.manager.newAccountValid():
                     self.stdscr.addstr(1, 30, "Account existiert schon")
                     return True
                 self.stdscr.addstr(1, 30, "Account erstellt")
@@ -227,11 +227,11 @@ class Interface:
                 self.entryGenerator = PasswordGenerator(length=int(self.length), useCapitals= self.useCapitals, useNumbers=self.useNumber,
                                                         useSpecialCharacters=self.useSpechialCharacters)
                 self.entryGenerator.excludeCharacters(self.excludeCharacters)
-                self.excludeCharacters:str =""
-                self.length:str = "6"
-                self.useCapitals:bool = True
-                self.useNumber:bool = True
-                self.useSpechialCharacters: bool = True
+                self.excludeCharacters=""
+                self.length= "6"
+                self.useCapitals = True
+                self.useNumber = True
+                self.useSpechialCharacters = True
             return True
         return False
 
@@ -288,7 +288,7 @@ class Interface:
             self.lengthOfPage = self.showList(99)
         elif self.layer == 4 and self.chooseRow == 12:
             self.createPassword1 = self.entryGenerator.generate()
-            self.stdscr.addstr(8, 40, self.createPassword1 + "  ")           
+            self.stdscr.addstr(8, 40, self.createPassword1 + "  ")
         return False
     def handleKeyLeft(self)->bool:
         """Kümmer sich um Pfeiltaste Links Eingabe"""
@@ -486,7 +486,7 @@ class Interface:
         curses.nocbreak()
         #stdscr.keypad(False)
         curses.echo()
-        
+
 
 
 def main() -> None:

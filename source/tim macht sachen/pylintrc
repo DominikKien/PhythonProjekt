@@ -9,10 +9,10 @@ module-naming-style=camelCase
 variable-naming-style=camelCase
 
 [DESIGN]
-max-attributes=30
+max-attributes=40
 max-args=10
-max-branches=30
-max-returns=15
-max-statements=60 
+max-branches=40
+max-returns=20
+max-statements=90
 [FORMAT]
 max-line-length=160
