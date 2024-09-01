@@ -47,7 +47,7 @@ class PasswordManager:
             #self.verify()
             return True
 
-    def get_entry(self, name: str) -> any:
+    def get_entry(self, name: str) -> dict:
         entry = self.storage.getEntry(username=self.user.username, name=str(name))
         if entry:
             # Decrypt the password before returning
@@ -59,7 +59,7 @@ class PasswordManager:
             for i in range(len(entry["history"])):
                 entry["history"][i] = self.encryption.decrypt(entry["history"][i]) 
             return entry
-        return None
+        return {}
 
     def update_entry(self, name: str, new_password: str) -> None:
         encrypted_password = self.encryption.encrypt(new_password)
