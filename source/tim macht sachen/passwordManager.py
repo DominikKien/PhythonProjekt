@@ -9,7 +9,7 @@ class PasswordManager:
     '''Controller of the Account Managment'''
     def __init__(self, user: User, storageFile: str = 'passwords.json') -> None:
         self.user = user
-        self.encryption = Encryption(user.master_password_hash)
+        self.encryption = Encryption(user.masterPasswordHash)
         self.storage = Storage(storageFile)
 
     def existingAccountValid(self)-> bool:
@@ -62,3 +62,16 @@ class PasswordManager:
     def getAllEntryes(self) -> list:
         save = self.storage.getAllEntryes(self.user.username)
         return save
+
+    def getAllEntriesByUrl(self) -> list:
+        entryes = self.getAllEntryes()
+        entryes = entryes.remove("verify")
+
+
+    def getAllEntriesByName(self) -> list:
+        entryes = self.getAllEntryes()
+        entryes = entryes.remove("verify")
+
+        for i in entryes:
+            entry = self.getEntry(i)
+            entry = entry["name"]
