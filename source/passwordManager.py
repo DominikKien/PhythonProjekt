@@ -69,7 +69,7 @@ class PasswordManager:
         entryes.remove("verify")
         urls = []
         for i in entryes:
-            if str(url) in str(entryes[self.getEntry(i)["url"]]):
+            if str(url) in str(self.getEntry(i)["url"]):
                 urls.append(i)
         return urls
 
